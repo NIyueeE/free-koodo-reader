@@ -80,6 +80,8 @@ jobs:
 
       - name: Build/release Electron app
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             yarn electron-builder --publish always
