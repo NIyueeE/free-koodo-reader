@@ -5,6 +5,8 @@ on: workflow_dispatch
 jobs:
   release:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -77,8 +79,10 @@ jobs:
           ]' package.json > package.json.tmp && mv package.json.tmp package.json
 
       - name: Build/release Electron app
-        uses: samuelmeuli/action-electron-builder@v1.6.0
-        with:
-          build_script_name: "build"
-          github_token: ${{ secrets.github_token }}
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            yarn electron-builder --publish always
+          else
+            yarn electron-builder
+          fi
