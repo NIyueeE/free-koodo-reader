@@ -29,7 +29,7 @@ jobs:
         run: yarn build
 
       - name: Upload web build artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: web-build
           path: build
@@ -58,7 +58,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Download web build artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           name: web-build
           path: build
@@ -71,7 +71,7 @@ jobs:
         run: ./gradlew assembleDebug --no-daemon
 
       - name: Upload Android debug APK artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
