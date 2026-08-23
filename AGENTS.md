@@ -1,10 +1,19 @@
 # AGENTS.md
 
-本文件为 AI 编码助手在本仓库工作时的简要指引。更详细的背景请同时参考 `CLAUDE.md` 和 `README.md`。
+本文件为 AI 编码助手在本仓库工作时的简要指引。更详细的背景请同时参考 `CLAUDE.md`、`README.md` 和 `HANDOFF.md`。
 
 ## 项目简介
 
 Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子书阅读器，基于 Electron + React (CRA) + Redux 构建。
+
+## 当前目标
+
+下一个目标是**完成 Android 端开发**。当前推荐方案是：
+
+- 使用 **Capacitor** 包装现有 Web 构建。
+- 在 `src/platform/` 中建立平台抽象层，替换 `window.electronAPI` 的直接调用。
+- 桌面端继续走 Electron，Android 端走 Capacitor。
+- 详细分析和迁移计划见 `HANDOFF.md`。
 
 ## 默认分支
 
@@ -20,6 +29,12 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 - **不要主动提交代码**：除非用户明确要求，否则不执行 `git commit`、`git push` 等操作。
 - **不包含任何官方云服务**：不要重新引入 Koodo 官方账号、登录、Pro、付费、AI 云服务、官方 API/域名。
 - WebDAV 同步使用 `webdav` 开源包，**仅支持 HTTPS**，凭据本地加密存储。
+- **Android 开发约束**：
+  - 新代码不要直接调用 `window.electronAPI`，应通过 `src/platform/` 抽象层。
+  - 保持 Web 构建始终可用；桌面端继续走 Electron。
+  - Android 数据库优先使用 `sql.js` WASM 或 Capacitor SQLite，不使用 `better-sqlite3`。
+  - Android 文件访问使用 Capacitor Filesystem / Storage Access Framework，不使用 Electron `fs`。
+  - 新增 Android 相关代码时同步更新 `HANDOFF.md`。
 - 用户可见文本必须使用 `react-i18next` 的 `t("key")`，不得硬编码。
 - TypeScript 避免 `any`，在 `interface.tsx` 中定义类型。
 - Redux 状态类型使用 `stateType`（定义在 `src/store/index.tsx`）。
@@ -46,9 +61,11 @@ yarn rebuild  # 重新编译原生模块
 
 ```
 .
+├── HANDOFF.md              # 项目交接 / Android 迁移计划
 ├── main.js                 # Electron 主进程
 ├── httpserver/             # Go HTTP 服务 (KOReader/OPDS)
 ├── public/                 # 静态资源 + WASM 库
+├── android/                # Android 工程（Capacitor 生成，后续加入）
 ├── src/
 │   ├── assets/             # 阅读引擎、多语言、样式、图片
 │   ├── components/         # 可复用 UI 组件
@@ -56,6 +73,7 @@ yarn rebuild  # 重新编译原生模块
 │   ├── containers/         # 容器组件 (Redux stateful)
 │   ├── models/             # 数据模型
 │   ├── pages/              # 页面级组件
+│   ├── platform/           # 平台抽象层（Electron / Capacitor / Web）
 │   ├── router/             # React Router 路由配置
 │   ├── store/              # Redux (actions + reducers)
 │   └── utils/              # 工具函数
