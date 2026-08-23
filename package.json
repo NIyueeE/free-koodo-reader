@@ -119,7 +119,7 @@
   },
   "homepage": "./",
   "build": {
-    "appId": "xyz.960960.koodo",
+    "appId": "xyz.freekoodo.reader",
     "productName": "Free Koodo Reader",
     "copyright": "Copyright (c) 2020-2025 ${author}",
     "files": [
@@ -132,9 +132,9 @@
       "preload.js"
     ],
     "protocols": {
-      "name": "KoodoReader",
+      "name": "FreeKoodoReader",
       "schemes": [
-        "koodo-reader"
+        "free-koodo-reader"
       ]
     },
     "directories": {
@@ -239,6 +239,7 @@
     "linux": {
       "icon": "assets/icons",
       "category": "Office",
+      "executableName": "free-koodo-reader",
       "target": [
         {
           "target": "snap",
@@ -271,12 +272,12 @@
       "artifactName": "${productName}-${version}-${arch}-Portable.${ext}"
     },
     "appx": {
-      "applicationId": "com.koodoreader.electron",
-      "identityName": "AppbyTroye.KoodoReader",
-      "publisher": "CN=0AEAD7C6-DF4A-4D05-8FA0-D816D7DE37FF",
-      "publisherDisplayName": "App by Troye",
+      "applicationId": "FreeKoodoReader",
+      "identityName": "FreeKoodoReader",
+      "publisher": "CN=FreeKoodoReader",
+      "publisherDisplayName": "Free Koodo Reader",
       "artifactName": "${productName}-${version}-${arch}.${ext}",
-      "displayName": "Koodo Reader",
+      "displayName": "Free Koodo Reader",
       "backgroundColor": "transparent"
     },
     "nsis": {
