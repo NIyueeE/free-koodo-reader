@@ -20,7 +20,6 @@ import toast from "react-hot-toast";
 import TTSUtil from "../../utils/reader/ttsUtil";
 import "./textToSpeech.css";
 import { fetchUserInfo } from "../../utils/request/user";
-import { getSplitSentence } from "../../utils/request/reader";
 import { Howl } from "howler";
 declare var window: any;
 class TextToSpeech extends React.Component<
@@ -227,7 +226,7 @@ class TextToSpeech extends React.Component<
       if (!this.props.isAuthed) {
         toast(this.props.t("Please upgrade to Pro to use this feature"));
         this.props.handleSetting(true);
-        this.props.handleSettingMode("account");
+        this.props.handleSettingMode("general");
         return;
       }
       ConfigService.setListConfig(
@@ -560,7 +559,11 @@ class TextToSpeech extends React.Component<
     if ((ConfigService.getReaderConfig("animation") || "none") !== "none") {
       await sleep(1000);
     }
-    let nodeList = [];
+    let nodeList: {
+      text: string;
+      voiceName: string;
+      voiceEngine: string;
+    }[] = [];
     let nodeTextList = (await this.props.htmlBook.rendition.audioText()).filter(
       (item: string) => item && item.trim()
     );
@@ -599,42 +602,14 @@ class TextToSpeech extends React.Component<
       let splitTextList = rawNodeList.flatMap((texts, index) =>
         texts.map((text) => ({ text, index: index }))
       );
-      let res = await getSplitSentence(splitTextList);
-      toast.dismiss("tts-load");
-
       let narratorVoice = this.state.multiRoleNarratorVoice;
       let narratorEngine = this.state.multiRoleNarratorEngine;
-      let maleVoice = this.state.multiRoleMaleVoice;
-      let maleEngine = this.state.multiRoleMaleEngine;
-      let femaleVoice = this.state.multiRoleFemaleVoice;
-      let femaleEngine = this.state.multiRoleFemaleEngine;
-      let childVoice = this.state.multiRoleChildVoice;
-      let childEngine = this.state.multiRoleChildEngine;
-      if (res && res.data && res.data.sentences) {
-        nodeList = res.data.sentences.map((item: any) => {
-          let voiceName = narratorVoice;
-          let voiceEngine = narratorEngine;
-          if (item.role === "male") {
-            voiceName = maleVoice || narratorVoice;
-            voiceEngine = maleEngine || narratorEngine;
-          } else if (item.role === "female") {
-            voiceName = femaleVoice || narratorVoice;
-            voiceEngine = femaleEngine || narratorEngine;
-          } else if (item.role === "child") {
-            voiceName = childVoice || narratorVoice;
-            voiceEngine = childEngine || narratorEngine;
-          }
-          return {
-            text: item.text,
-            voiceName,
-            voiceEngine,
-          };
-        });
-      } else {
-        toast.error(this.props.t("Analysis failed"));
-        this.setState({ isAudioOn: false });
-        return [];
-      }
+      nodeList = splitTextList.map((item) => ({
+        text: item.text,
+        voiceName: narratorVoice,
+        voiceEngine: narratorEngine,
+      }));
+      toast.dismiss("tts-load");
     }
 
     if (nodeList.length === 0) {
@@ -1143,7 +1118,7 @@ class TextToSpeech extends React.Component<
                   this.props.t("Please upgrade to Pro to use this feature")
                 );
                 this.props.handleSetting(true);
-                this.props.handleSettingMode("account");
+                this.props.handleSettingMode("general");
                 return;
               }
               ConfigService.setReaderConfig("voiceEngine", newEngine);

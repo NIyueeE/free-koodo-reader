@@ -1,8 +1,8 @@
 {
-  "name": "koodo-reader",
+  "name": "free-koodo-reader",
   "main": "main.js",
   "version": "2.4.4",
-  "description": "Koodo Reader is a cross-platform ebook reader",
+  "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
     "name": "App by Troye",
     "email": "feedback@koodoreader.com"
@@ -120,7 +120,7 @@
   "homepage": "./",
   "build": {
     "appId": "xyz.960960.koodo",
-    "productName": "Koodo Reader",
+    "productName": "Free Koodo Reader",
     "copyright": "Copyright (c) 2020-2025 ${author}",
     "files": [
       "build/**/*",
@@ -131,15 +131,6 @@
       "main.js",
       "preload.js",
       "chat-preload.js"
-    ],
-    "extraResources": [
-      {
-        "from": "assets/macos",
-        "to": "assets/macos",
-        "filter": [
-          "ocr-*-apple-darwin"
-        ]
-      }
     ],
     "protocols": {
       "name": "KoodoReader",
@@ -152,8 +143,8 @@
     },
     "publish": {
       "provider": "github",
-      "repo": "koodo-reader",
-      "owner": "koodo-reader"
+      "repo": "free-koodo-reader",
+      "owner": "NIyueeE"
     },
     "buildDependenciesFromSource": false,
     "nodeGypRebuild": false,
@@ -220,42 +211,6 @@
       }
     ],
     "extends": null,
-    "dmg": {
-      "contents": [
-        {
-          "x": 410,
-          "y": 150,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 130,
-          "y": 150,
-          "type": "file"
-        }
-      ]
-    },
-    "mac": {
-      "darkModeSupport": true,
-      "entitlements": "assets/macos/entitlements.mac.plist",
-      "entitlementsInherit": "assets/macos/entitlements.mac.plist",
-      "identity": "Liang Guo",
-      "gatekeeperAssess": false,
-      "hardenedRuntime": true,
-      "notarize": true,
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
-      ],
-      "icon": "assets/icons/icon.icns",
-      "category": "public.app-category.productivity",
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
     "win": {
       "target": [
         {

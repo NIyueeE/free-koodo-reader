@@ -35,7 +35,10 @@ import PopupRefer from "../../components/popups/popupRefer";
 import DatabaseService from "../../utils/storage/databaseService";
 import { getOcrResult, getOcrResultV2 } from "../../utils/request/reader";
 import { BookHelper } from "../../assets/lib/kookit.min";
-import { parseWithSystemOCR } from "../../utils/request/common";
+import {
+  parseWithExternalOcrApi,
+  parseWithSystemOCR,
+} from "../../utils/request/common";
 declare var window: any;
 let lock = false; //prevent from clicking too fasts
 
@@ -312,9 +315,12 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
             recognize:
               getDefaultOcrEngine(this.props.currentBook) === "system-ocr"
                 ? parseWithSystemOCR
-                : ConfigService.getReaderConfig(ocrLangKey) === "accurate"
-                  ? getOcrResultV2
-                  : getOcrResult,
+                : getDefaultOcrEngine(this.props.currentBook) ===
+                    "external-ocr-api"
+                  ? parseWithExternalOcrApi
+                  : ConfigService.getReaderConfig(ocrLangKey) === "accurate"
+                    ? getOcrResultV2
+                    : getOcrResult,
           },
           ocrEngine: getDefaultOcrEngine(this.props.currentBook),
           serverRegion:

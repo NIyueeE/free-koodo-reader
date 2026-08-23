@@ -5,12 +5,12 @@ import {
   ConfigService,
 } from "../../assets/lib/kookit-extra-browser.min";
 import DatabaseService from "../storage/databaseService";
+import TokenService from "../storage/tokenService";
 import localforage from "localforage";
 import Book from "../../models/Book";
 import Note from "../../models/Note";
 import Bookmark from "../../models/Bookmark";
 import DictHistory from "../../models/DictHistory";
-import { decryptToken } from "../request/thirdparty";
 import toast from "react-hot-toast";
 import { Buffer } from "buffer";
 import i18n from "../../i18n";
@@ -307,11 +307,12 @@ export const getCloudToken = async (service: string) => {
   if (configCache[service]) {
     return configCache[service];
   } else {
-    let result = await decryptToken(service);
-    if (result.code !== 200) {
+    // free-koodo-reader: cloud credentials are stored locally and encrypted.
+    const token = await TokenService.getToken(service + "_token");
+    if (!token) {
       return null;
     }
-    let config = JSON.parse(result.data.token);
+    let config = JSON.parse(token);
     configCache[service] = config;
     return config;
   }

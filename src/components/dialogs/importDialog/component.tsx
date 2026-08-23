@@ -69,7 +69,7 @@ class ImportDialog extends React.Component<
     ) {
       toast(this.props.t("Please upgrade to Pro to use this feature"));
       this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
+      this.props.handleSettingMode("general");
       return;
     }
     if (event.target.value === "add") {
@@ -405,7 +405,7 @@ class ImportDialog extends React.Component<
                           )
                         );
                         this.props.handleSetting(true);
-                        this.props.handleSettingMode("account");
+                        this.props.handleSettingMode("general");
                         return;
                       }
 

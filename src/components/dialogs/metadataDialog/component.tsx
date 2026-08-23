@@ -8,7 +8,6 @@ import {
   BookResultItem,
 } from "./interface";
 import toast from "react-hot-toast";
-import { getBookMetadata } from "../../../utils/request/reader";
 
 class MetadataDialog extends React.Component<
   MetadataDialogProps,
@@ -33,46 +32,13 @@ class MetadataDialog extends React.Component<
   }
 
   handleSearch = async () => {
-    const { searchName, searchAuthor } = this.state;
-    if (!searchName.trim() && !searchAuthor.trim()) return;
-
-    if (!this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
-
+    // free-koodo-reader: official online metadata service removed.
     this.setState({
-      isLoading: true,
-      error: "",
+      isLoading: false,
+      error: this.props.t("No metadata found"),
       results: [],
       selectedId: null,
     });
-
-    try {
-      const res = await getBookMetadata(searchName, searchAuthor);
-      if (res && res.code === 200 && res.data) {
-        const data = res.data as BookResultItem[];
-
-        this.setState({ results: data, isLoading: false });
-      } else if (res && res.code === 200 && !res.data) {
-        this.setState({
-          isLoading: false,
-          error: this.props.t("No metadata found"),
-        });
-      } else {
-        this.setState({
-          isLoading: false,
-          error: this.props.t("Failed to fetch metadata"),
-        });
-      }
-    } catch {
-      this.setState({
-        isLoading: false,
-        error: this.props.t("Failed to fetch metadata"),
-      });
-    }
   };
 
   handleSelect = (id: string) => {

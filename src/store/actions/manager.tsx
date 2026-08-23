@@ -1,28 +1,12 @@
-import {
-  ConfigService,
-  KookitConfig,
-} from "../../assets/lib/kookit-extra-browser.min";
+import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import BookModel from "../../models/Book";
 import PluginModel from "../../models/Plugin";
 import { Dispatch } from "redux";
 import DatabaseService from "../../utils/storage/databaseService";
-import {
-  fetchUserInfo,
-  getUserRequest,
-  resetUserRequest,
-} from "../../utils/request/user";
-import {
-  officialDictList,
-  officialTranList,
-} from "../../constants/settingList";
 import toast from "react-hot-toast";
 import BookUtil from "../../utils/file/bookUtil";
 import i18n from "../../i18n";
-import { langToName } from "../../utils/common";
-import { resetReaderRequest } from "../../utils/request/reader";
-import { resetThirdpartyRequest } from "../../utils/request/thirdparty";
 import DictUtil from "../../utils/file/dictUtil";
-import TokenService from "../../utils/storage/tokenService";
 import { resolveStoredPlugin } from "../../utils/plugins/records";
 import { isBuiltinPluginKey } from "../../utils/plugins/catalog";
 
@@ -227,57 +211,9 @@ export function handleFetchBooks() {
 }
 export function handleFetchUserInfo() {
   return async (dispatch: Dispatch) => {
-    let response = await fetchUserInfo();
-    let userInfo: any = null;
-    if (response.code === 200) {
-      userInfo = response.data;
-      ConfigService.setReaderConfig(
-        "isEnableKoodoSync",
-        userInfo.is_enable_koodo_sync || "no"
-      );
-      if (
-        userInfo.is_enable_koodo_sync === "yes" &&
-        userInfo.default_sync_option &&
-        userInfo.default_sync_token
-      ) {
-        if (
-          ConfigService.getItem("defaultSyncOption") ===
-          userInfo.default_sync_option
-        ) {
-          let encryptedToken = await TokenService.getToken(
-            userInfo.default_sync_option + "_token"
-          );
-          if (encryptedToken !== userInfo.default_sync_token) {
-            await TokenService.setToken(
-              userInfo.default_sync_option + "_token",
-              userInfo.default_sync_token
-            );
-          }
-        }
-      }
-    }
-    if (
-      userInfo &&
-      userInfo.valid_until < parseInt(new Date().getTime() / 1000 + "")
-    ) {
-      dispatch(handleShowSupport(true));
-    }
-    if (userInfo && userInfo.valid_until && userInfo.token_valid_until) {
-      if (
-        userInfo.valid_until > 0 &&
-        userInfo.token_valid_until > 0 &&
-        userInfo.valid_until > userInfo.token_valid_until
-      ) {
-        let userRequest = await getUserRequest();
-        await userRequest.refreshUserToken();
-        resetReaderRequest();
-        resetUserRequest();
-        resetThirdpartyRequest();
-      }
-    }
-
-    dispatch(handleUserInfo(userInfo));
-    return userInfo;
+    // free-koodo-reader: no official account / Pro service.
+    dispatch(handleUserInfo(null));
+    return null;
   };
 }
 export function handleFetchPlugins() {
@@ -343,192 +279,7 @@ export function handleFetchPlugins() {
           }
         }
 
-        if (ConfigService.getReaderConfig("aiTranslateModel")) {
-          const modelKey = ConfigService.getReaderConfig("aiTranslateModel");
-          const entry = ConfigService.getObjectConfig(
-            modelKey,
-            "aiModelConfig",
-            null
-          );
-          if (entry && entry.key) {
-            let transPlugin = new PluginModel(
-              "custom-ai-trans-plugin",
-              "translation",
-              "Custom AI Translation",
-              "translation",
-              "1.0.0",
-              "",
-              entry.config || {},
-              officialTranList,
-              [],
-              "",
-              ""
-            );
-            pluginList.push(transPlugin);
-          }
-        }
-        if (ConfigService.getReaderConfig("aiDictModel")) {
-          const modelKey = ConfigService.getReaderConfig("aiDictModel");
-          const entry = ConfigService.getObjectConfig(
-            modelKey,
-            "aiModelConfig",
-            null
-          );
-          if (entry && entry.key) {
-            let dictPlugin = new PluginModel(
-              "custom-ai-dict-plugin",
-              "dictionary",
-              "Custom AI Dictionary",
-              "dict",
-              "1.0.0",
-              "",
-              entry.config || {},
-              officialDictList,
-              [],
-              "",
-              ""
-            );
-            pluginList.push(dictPlugin);
-          }
-        }
-        if (ConfigService.getReaderConfig("aiAssistanceModel")) {
-          const modelKey = ConfigService.getReaderConfig("aiAssistanceModel");
-          const entry = ConfigService.getObjectConfig(
-            modelKey,
-            "aiModelConfig",
-            null
-          );
-          if (entry && entry.key) {
-            let assistPlugin = new PluginModel(
-              "custom-ai-assistant-plugin",
-              "assistant",
-              "Custom AI Assistance",
-              "assistant",
-              "1.0.0",
-              "",
-              entry.config || {},
-              officialTranList,
-              [],
-              "",
-              ""
-            );
-            pluginList.push(assistPlugin);
-          }
-        }
-        if (ConfigService.getReaderConfig("isDisableAI") !== "yes") {
-          // 官方 AI 插件始终展示（不依赖登录），选择时再判断是否升级
-          let dictPlugin = new PluginModel(
-            "official-ai-dict-plugin",
-            "dictionary",
-            "Official AI Dictionary",
-            "dict",
-            "1.0.0",
-            "",
-            {},
-            officialDictList,
-            [],
-            "",
-            ""
-          );
-          pluginList.push(dictPlugin);
-          let transPlugin = new PluginModel(
-            "official-ai-trans-plugin",
-            "translation",
-            "Official AI Translation",
-            "translation",
-            "1.0.0",
-            "",
-            {},
-            officialTranList,
-            [],
-            "",
-            ""
-          );
-          pluginList.push(transPlugin);
-          let sumPlugin = new PluginModel(
-            "official-ai-assistant-plugin",
-            "assistant",
-            "Official AI Assistant",
-            "assistant",
-            "1.0.0",
-            "",
-            {},
-            officialTranList,
-            [],
-            "",
-            ""
-          );
-          pluginList.push(sumPlugin);
-        }
-        if (ConfigService.getReaderConfig("isDisableAI") !== "yes") {
-          // 官方 AI 语音始终展示（不依赖登录），选择时再判断是否升级
-          let sortedVoiceList = [
-            ...KookitConfig.OfficialVoiceList.map((item) => {
-              return {
-                ...item,
-                label:
-                  i18n.t("Official AI Voice") +
-                  " - " +
-                  (KookitConfig.SelfHostedVoiceList.includes(item.name)
-                    ? i18n.t("Limited free") + " - "
-                    : "") +
-                  item.displayName +
-                  " - " +
-                  item.language +
-                  " - " +
-                  (item.gender === "female"
-                    ? i18n.t("Female voice")
-                    : i18n.t("Male voice")),
-              };
-            }),
-            ...KookitConfig.AzureTTSVoiceList.map((item) => {
-              return {
-                ...item,
-                label:
-                  "Azure TTS" +
-                  " - " +
-                  (KookitConfig.SelfHostedVoiceList.includes(item.name)
-                    ? i18n.t("Limited free") + " - "
-                    : "") +
-                  item.displayName +
-                  " - " +
-                  langToName(item.locale) +
-                  " - " +
-                  (item.gender === "female"
-                    ? i18n.t("Female voice")
-                    : i18n.t("Male voice")),
-              };
-            }),
-          ];
-          let voicePlugin = new PluginModel(
-            "official-ai-voice-plugin",
-            "voice",
-            "Official AI Voice",
-            "speaker",
-            "1.0.0",
-            "",
-            {},
-            {},
-            sortedVoiceList.map((item: any) => {
-              return {
-                ...item,
-                plugin: "official-ai-voice-plugin",
-                config: {},
-                displayName: item.label,
-              };
-            }),
-            "",
-            ""
-          );
-          pluginList.push(voicePlugin);
-        }
-        TokenService.getToken("is_authed").then((value) => {
-          let isAuthed = value === "yes";
-          if (isAuthed && !ConfigService.getItem("serverRegion")) {
-            ConfigService.setItem("serverRegion", "global");
-          }
-          dispatch(handlePlugins(pluginList));
-        });
+        dispatch(handlePlugins(pluginList));
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : String(error);
@@ -540,17 +291,8 @@ export function handleFetchPlugins() {
 }
 export function handleFetchAuthed() {
   return (dispatch: Dispatch) => {
-    try {
-      TokenService.getToken("is_authed").then((value) => {
-        let isAuthed = value === "yes";
-        if (isAuthed && !ConfigService.getItem("serverRegion")) {
-          ConfigService.setItem("serverRegion", "global");
-        }
-        dispatch(handleAuthed(isAuthed));
-      });
-    } catch (error) {
-      console.error(error);
-    }
+    // free-koodo-reader: all local features are unlocked.
+    dispatch(handleAuthed(true));
   };
 }
 export function handleFetchBookSortCode() {

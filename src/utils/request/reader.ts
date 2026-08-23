@@ -5,18 +5,9 @@ import {
 } from "../../assets/lib/kookit-extra-browser.min";
 import i18n from "../../i18n";
 import { handleExitApp } from "./common";
-import {
-  getServerRegion,
-  getWebsiteUrl,
-  openExternalUrl,
-  openInBrowser,
-  vexComfirmAsync,
-} from "../common";
-import { getTempToken } from "./user";
+import { getServerRegion } from "../common";
 import TokenService from "../storage/tokenService";
 let readerRequest: ReaderRequest | undefined;
-let isShowingQuotaAlert = false;
-let quotaAlertDismissTime = 0;
 export const getTransStream = async (
   text: string,
   from: string,
@@ -199,77 +190,6 @@ export const getTTSAudio = async (
   } else if (response.code === 401) {
     handleExitApp();
     return;
-  } else if (response.code === 20009) {
-    const now = Date.now();
-    const timeSinceDismiss = now - quotaAlertDismissTime;
-
-    if (!isShowingQuotaAlert && timeSinceDismiss >= 10000 && response.data) {
-      isShowingQuotaAlert = true;
-      if (response.data.user_type === "pro") {
-        let result = await vexComfirmAsync(
-          i18n.t(
-            "You have exhausted your daily free AI voice character quota. Please purchase more quota to continue using this feature or wait until the quota resets. You can also use other TTS voices instead."
-          ) +
-            " " +
-            (response.data && response.data.ttl
-              ? i18n.t("Your quota will be reset in", {
-                  ttl: (response.data.ttl / 3600).toFixed(1),
-                })
-              : ""),
-          "Purchase more quota"
-        );
-        if (result) {
-          isShowingQuotaAlert = false;
-          quotaAlertDismissTime = Date.now();
-          openExternalUrl(
-            getWebsiteUrl() +
-              (ConfigService.getReaderConfig("lang").startsWith("zh")
-                ? "/zh"
-                : "/en") +
-              "/tts-quota"
-          );
-        } else {
-          isShowingQuotaAlert = false;
-          quotaAlertDismissTime = Date.now();
-        }
-      } else {
-        let result = await vexComfirmAsync(
-          i18n.t(
-            "Please upgrade to Pro to unlock more daily free quota or wait until the quota resets. You can also use other TTS voices instead."
-          ) +
-            " " +
-            (response.data && response.data.ttl
-              ? i18n.t("Your quota will be reset in", {
-                  ttl: (response.data.ttl / 3600).toFixed(1),
-                })
-              : ""),
-          "Upgrade to Pro"
-        );
-        if (result) {
-          isShowingQuotaAlert = false;
-          quotaAlertDismissTime = Date.now();
-          let response = await getTempToken();
-          if (response.code === 200) {
-            let tempToken = response.data.access_token;
-            let deviceUuid = await TokenService.getFingerprint();
-            openInBrowser(
-              getWebsiteUrl() +
-                (ConfigService.getReaderConfig("lang").startsWith("zh")
-                  ? "/zh"
-                  : "/en") +
-                "/pricing?temp_token=" +
-                tempToken +
-                "&device_uuid=" +
-                deviceUuid
-            );
-          }
-        } else {
-          isShowingQuotaAlert = false;
-          quotaAlertDismissTime = Date.now();
-        }
-      }
-    }
-    return response;
   } else {
     toast.error(i18n.t("Fetch failed, error code") + ": " + response.msg);
   }

@@ -4,13 +4,11 @@ import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
 import GeneralSetting from "../../../containers/settings/generalSetting";
 import SyncSetting from "../../../containers/settings/syncSetting";
-import AccountSetting from "../../../containers/settings/accountSetting";
 import PluginSetting from "../../../containers/settings/pluginSetting";
 import ReadingSetting from "../../../containers/settings/readingSetting";
 import AppearanceSetting from "../../../containers/settings/appearanceSetting";
 import AboutSetting from "../../../containers/settings/aboutSetting";
 import DataSetting from "../../../containers/settings/dataSetting";
-import AISetting from "../../../containers/settings/aiSetting";
 import BackgroundSetting from "../../../containers/settings/backgroundSetting";
 import FontSetting from "../../../containers/settings/fontSetting";
 import ChapterSetting from "../../../containers/settings/chapterSetting";
@@ -78,12 +76,8 @@ class SettingDialog extends React.Component<
         return "Plugins";
       case "sync":
         return "Sync and backup";
-      case "account":
-        return "Account";
       case "about":
         return "About";
-      case "ai":
-        return "AI service";
       case "background":
         return "Background";
       case "font":
@@ -140,7 +134,6 @@ class SettingDialog extends React.Component<
               "More settings",
               "13px"
             )}
-            {this.renderSidebarItem("account", "icon-user", "Account", "18px")}
             {this.renderSidebarItem("about", "icon-detail", "About", "18px")}
           </div>
 
@@ -149,12 +142,6 @@ class SettingDialog extends React.Component<
           {/* 第二组 */}
           <div className="setting-dialog-sidebar-group">
             {this.renderSidebarItem("plugins", "icon-internet", "Plugins", "")}
-            {this.renderSidebarItem(
-              "ai",
-              "icon-idea-line",
-              "AI service",
-              "18px"
-            )}
             {this.renderSidebarItem(
               "background",
               "icon-image",
@@ -216,14 +203,10 @@ class SettingDialog extends React.Component<
               <AppearanceSetting />
             ) : this.props.settingMode === "sync" ? (
               <SyncSetting />
-            ) : this.props.settingMode === "account" ? (
-              <AccountSetting />
             ) : this.props.settingMode === "data" ? (
               <DataSetting />
             ) : this.props.settingMode === "about" ? (
               <AboutSetting />
-            ) : this.props.settingMode === "ai" ? (
-              <AISetting />
             ) : this.props.settingMode === "background" ? (
               <BackgroundSetting />
             ) : this.props.settingMode === "font" ? (

@@ -174,7 +174,7 @@ class DropdownList extends React.Component<
             });
             toast(this.props.t("Please upgrade to Pro to use this feature"));
             this.props.handleSetting(true);
-            this.props.handleSettingMode("account");
+            this.props.handleSettingMode("general");
             ConfigService.setReaderConfig("fullTranslationMode", "no");
             return;
           }

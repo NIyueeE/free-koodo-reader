@@ -28,6 +28,7 @@ const store = new Store();
 const fs = require("fs");
 const fsExtra = require("fs-extra");
 const nodeCrypto = require("crypto");
+const webdav = require("webdav");
 const yazl = require("yazl");
 const { getVoicePlugin } = require("./src/utils/plugins/main/registry");
 const configDir = app.getPath("userData");
@@ -193,39 +194,29 @@ const runPowerShellScript = (script, timeout = 30000) => {
 
 const OCR_TEMP_DIR = path.join(configDir, "ocr-tmp");
 
-// macOS OCR 二进制支持的语言（VNRecognizeTextRequest recognitionLanguages）
-const MACOS_OCR_LANGS = new Set([
-  "zh-Hans",
-  "zh-Hant",
-  "en-US",
-  "ja-JP",
-  "ko-KR",
-  "fr-FR",
-]);
-
 // 把渲染进程传入的语言代码映射为各平台可识别的标签
-// key: 应用内统一代码；value: { macos, win }
+// free-koodo-reader: macOS OCR removed, only Windows remains.
 const OCR_LANG_MAP = {
-  "zh-CN": { macos: "zh-Hans", win: "zh-Hans-CN" },
-  "zh-SG": { macos: "zh-Hans", win: "zh-Hans-CN" },
-  "zh-TW": { macos: "zh-Hant", win: "zh-Hant-TW" },
-  "zh-HK": { macos: "zh-Hant", win: "zh-Hant-HK" },
-  "zh-Hans": { macos: "zh-Hans", win: "zh-Hans-CN" },
-  "zh-Hant": { macos: "zh-Hant", win: "zh-Hant-TW" },
-  en: { macos: "en-US", win: "en-US" },
-  "en-US": { macos: "en-US", win: "en-US" },
-  "en-GB": { macos: "en-US", win: "en-GB" },
-  ja: { macos: "ja-JP", win: "ja" },
-  "ja-JP": { macos: "ja-JP", win: "ja" },
-  ko: { macos: "ko-KR", win: "ko" },
-  "ko-KR": { macos: "ko-KR", win: "ko" },
-  fr: { macos: "fr-FR", win: "fr" },
-  "fr-FR": { macos: "fr-FR", win: "fr" },
+  "zh-CN": { win: "zh-Hans-CN" },
+  "zh-SG": { win: "zh-Hans-CN" },
+  "zh-TW": { win: "zh-Hant-TW" },
+  "zh-HK": { win: "zh-Hant-HK" },
+  "zh-Hans": { win: "zh-Hans-CN" },
+  "zh-Hant": { win: "zh-Hant-TW" },
+  en: { win: "en-US" },
+  "en-US": { win: "en-US" },
+  "en-GB": { win: "en-GB" },
+  ja: { win: "ja" },
+  "ja-JP": { win: "ja" },
+  ko: { win: "ko" },
+  "ko-KR": { win: "ko" },
+  fr: { win: "fr" },
+  "fr-FR": { win: "fr" },
 };
 
 const resolveOcrLang = (lang) => {
-  if (!lang || lang === "auto") return { macos: "auto", win: "auto" };
-  return OCR_LANG_MAP[lang] || { macos: lang, win: lang };
+  if (!lang || lang === "auto") return { win: "auto" };
+  return OCR_LANG_MAP[lang] || { win: lang };
 };
 
 // 从 base64 或 dataURL 中解析出 { buffer, ext }
@@ -346,41 +337,6 @@ try {
       return cleanWindowsOcrText(raw);
     }
     throw new Error("Windows OCR returned unexpected output");
-  });
-};
-
-// macOS: 调用打包的 Vision framework 二进制
-const runMacosOcr = (imagePath, macosLang) => {
-  const arch = process.arch; // arm64 / x64
-  const archName =
-    arch === "arm64" ? "aarch64" : arch === "x64" ? "x86_64" : arch;
-  const binPath = isDev
-    ? path.join(__dirname, "assets/macos/ocr-" + archName + "-apple-darwin")
-    : path.join(
-        process.resourcesPath,
-        "assets/macos/ocr-" + archName + "-apple-darwin"
-      );
-  if (!fs.existsSync(binPath)) {
-    const err = new Error("macOS OCR binary not found: " + binPath);
-    err.code = "BIN_NOT_FOUND";
-    throw err;
-  }
-  return new Promise((resolve, reject) => {
-    execFile(
-      binPath,
-      [imagePath, macosLang],
-      { timeout: 60000, maxBuffer: 10 * 1024 * 1024 },
-      (error, stdout, stderr) => {
-        if (error) {
-          const msg = (stderr || error.message || "").trim();
-          const err = new Error(msg || "macOS OCR failed");
-          err.code = "BIN_FAILED";
-          reject(err);
-          return;
-        }
-        resolve((stdout || "").trim());
-      }
-    );
   });
 };
 
@@ -567,18 +523,6 @@ try {
 };
 
 const getBiometricCapability = async () => {
-  if (process.platform === "darwin") {
-    const available =
-      typeof systemPreferences.canPromptTouchID === "function" &&
-      systemPreferences.canPromptTouchID();
-    return {
-      available,
-      provider: "Touch ID",
-      platform: process.platform,
-      status: available ? "Available" : "Unavailable",
-    };
-  }
-
   if (process.platform === "win32") {
     try {
       const output = await runPowerShellScript(getWindowsHelloScript("check"));
@@ -612,35 +556,6 @@ const promptBiometricAuth = async (
   promptMessage = "Authenticate",
   owningWindow = null
 ) => {
-  if (process.platform === "darwin") {
-    const available =
-      typeof systemPreferences.canPromptTouchID === "function" &&
-      systemPreferences.canPromptTouchID();
-    if (!available) {
-      return {
-        success: false,
-        code: "Unavailable",
-        provider: "Touch ID",
-      };
-    }
-
-    try {
-      await systemPreferences.promptTouchID(promptMessage);
-      return {
-        success: true,
-        code: "Verified",
-        provider: "Touch ID",
-      };
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return {
-        success: false,
-        code: /cancel/i.test(message) ? "Canceled" : "Failed",
-        provider: "Touch ID",
-      };
-    }
-  }
-
   if (process.platform === "win32") {
     try {
       const hwnd = getWindowHandleValue(owningWindow);
@@ -730,7 +645,7 @@ function buildProgressBar(percentage) {
 const singleInstance = app.requestSingleInstanceLock();
 var filePath = null;
 var pendingDeepLink = null;
-if (process.platform != "darwin" && process.argv.length >= 2) {
+if (process.argv.length >= 2) {
   filePath = process.argv[1];
   // Check argv for a deep link URL (cold start)
   for (const arg of process.argv) {
@@ -822,7 +737,92 @@ const getDBConnection = (dbName, storagePath, sqlStatement) => {
   }
   return dbConnection[dbName];
 };
+const createWebDavSyncUtil = (config) => {
+  if (!config || !config.url || !/^https:\/\//i.test(config.url)) {
+    throw new Error("WebDAV requires HTTPS");
+  }
+  const client = webdav.createClient(config.url, {
+    username: config.username || "",
+    password: config.password || "",
+  });
+  const dir = config.dir || "";
+  const pathFor = (category, fileName) =>
+    [dir, category, fileName].filter(Boolean).join("/");
+  let downloadedSize = 0;
+  let completed = 0;
+  return {
+    async uploadFile(fileName, category, data) {
+      let content = data;
+      if (Buffer.isBuffer(data)) content = data;
+      else if (data && typeof data.arrayBuffer === "function") {
+        content = Buffer.from(await data.arrayBuffer());
+      }
+      await client.putFileContents(pathFor(category, fileName), content, {
+        overwrite: true,
+      });
+      completed += 1;
+      return { code: 200 };
+    },
+    async downloadFile(fileName, category) {
+      const buf = await client.getFileContents(pathFor(category, fileName), {
+        format: "arraybuffer",
+      });
+      downloadedSize += buf.byteLength || 0;
+      return buf;
+    },
+    async deleteFile(fileName, category) {
+      await client.deleteFile(pathFor(category, fileName));
+      return true;
+    },
+    async listFiles(category) {
+      const items = await client.getDirectoryContents(pathFor(category));
+      return (items || [])
+        .filter((item) => item.type === "file")
+        .map((item) => item.basename || item.filename.split("/").pop() || "");
+    },
+    async isExist(fileName, category) {
+      return client.exists(pathFor(category, fileName));
+    },
+    async listFileInfos(currentPath) {
+      const items = await client.getDirectoryContents(
+        [dir, currentPath].filter(Boolean).join("/")
+      );
+      return (items || []).map((item) => ({
+        name: item.basename || item.filename.split("/").pop() || "",
+        type: item.type === "directory" ? "folder" : "file",
+        size: item.size || 0,
+        path: currentPath,
+      }));
+    },
+    remote: {
+      async downloadFile(sourcePath) {
+        return client.getFileContents(
+          [dir, sourcePath.replace(/^\//, "")].filter(Boolean).join("/"),
+          { format: "arraybuffer" }
+        );
+      },
+    },
+    getDownloadedSize() {
+      return downloadedSize;
+    },
+    resetCounters() {
+      downloadedSize = 0;
+      completed = 0;
+    },
+    getStats() {
+      return { total: completed, completed, downloadedSize };
+    },
+    clearQueue() {},
+  };
+};
+
 const getSyncUtil = async (config, isUseCache = true) => {
+  if (config.service === "webdav") {
+    if (!isUseCache || !syncUtilCache.webdav) {
+      syncUtilCache.webdav = createWebDavSyncUtil(config);
+    }
+    return syncUtilCache.webdav;
+  }
   if (!isUseCache || !syncUtilCache[config.service]) {
     const { SyncUtil } = await import("./src/assets/lib/kookit-extra.min.mjs");
     syncUtilCache[config.service] = new SyncUtil(config.service, config);
@@ -831,11 +831,19 @@ const getSyncUtil = async (config, isUseCache = true) => {
 };
 const removeSyncUtil = (config) => {
   if (syncUtilCache[config.service]) {
-    syncUtilCache[config.service].clearQueue();
+    if (typeof syncUtilCache[config.service].clearQueue === "function") {
+      syncUtilCache[config.service].clearQueue();
+    }
     delete syncUtilCache[config.service];
   }
 };
 const getPickerUtil = async (config, isUseCache = true) => {
+  if (config.service === "webdav") {
+    if (!isUseCache || !pickerUtilCache.webdav) {
+      pickerUtilCache.webdav = createWebDavSyncUtil(config);
+    }
+    return pickerUtilCache.webdav;
+  }
   if (!isUseCache || !pickerUtilCache[config.service]) {
     const { SyncUtil } = await import("./src/assets/lib/kookit-extra.min.mjs");
     pickerUtilCache[config.service] = new SyncUtil(config.service, config);
@@ -974,10 +982,6 @@ const createTray = () => {
     ? path.join(__dirname, "./public/assets/icon.png")
     : path.join(__dirname, "./build/assets/icon.png");
   let trayIcon = nativeImage.createFromPath(iconPath);
-  if (os.platform() === "darwin") {
-    trayIcon = trayIcon.resize({ width: 16, height: 16, quality: "best" });
-    trayIcon.setTemplateImage(false);
-  }
   tray = new Tray(trayIcon);
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -2769,16 +2773,14 @@ const createMainWin = () => {
     try {
       const { buffer, ext } = parseOcrImageInput(base64);
       tempPath = writeOcrTempImage(buffer, ext);
-      const { macos, win } = resolveOcrLang(lang);
+      const { win } = resolveOcrLang(lang);
       let text = "";
-      if (process.platform === "darwin") {
-        text = await runMacosOcr(tempPath, macos);
-      } else if (process.platform === "win32") {
+      if (process.platform === "win32") {
         text = await runWindowsOcr(tempPath, win);
       } else {
         return {
           ok: false,
-          error: "System OCR is only supported on Windows and macOS",
+          error: "System OCR is only supported on Windows",
         };
       }
       return { ok: true, text };
@@ -2999,11 +3001,6 @@ console.info = function (...args) {
   originalConsoleInfo(...args); // 保留原信息日志
   log.info(args.map(serializeArg).join(" ")); // 写入信息日志文件
 };
-// Handle MacOS deep linking
-app.on("open-url", (event, url) => {
-  event.preventDefault();
-  handleCallback(url);
-});
 const handleCallback = (url) => {
   try {
     // 检查 URL 是否有效

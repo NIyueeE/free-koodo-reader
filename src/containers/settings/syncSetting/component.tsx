@@ -12,7 +12,6 @@ import {
   confirmBrowserExtensionAsync,
   detectKoodoExtension,
   generateSyncRecord,
-  getICloudDrivePath,
   getServerRegion,
   getWebsiteUrl,
   handleContextMenu,
@@ -104,12 +103,6 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       );
       return;
     }
-    if (!this.props.isAuthed) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
     if (
       !isElectron &&
       driveList.find((item) => item.value === targetDrive)?.needExtension
@@ -118,53 +111,22 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
         return;
       }
     }
-    if (
-      driveList.find((item) => item.value === targetDrive)?.isPro &&
-      !this.props.isAuthed
-    ) {
-      toast(this.props.t("Please upgrade to Pro to use this feature"));
-      this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
-      return;
-    }
     this.props.handleSettingDrive(targetDrive);
     let settingDrive = targetDrive;
-    if (settingDrive === "icloud" || settingDrive === "folder") {
-      let drivePath = "";
-      if (settingDrive === "icloud") {
-        drivePath = getICloudDrivePath();
-        if (!drivePath) {
-          toast.error(
-            this.props.t(
-              "Can't find Koodo Reader's folder in the default iCloud path, please make sure iCloud Drive is installed and set up correctly, and you have already synced your library to iCloud Drive on the iOS version first."
-            ),
-            {
-              duration: 6000,
-            }
-          );
-          this.props.handleSettingDrive("");
-          return;
-        }
-      } else if (settingDrive === "folder") {
-        const ipcRenderer = window.electronAPI;
-        drivePath = await ipcRenderer.invoke("select-path");
-        if (!drivePath) {
-          toast.error(i18n.t("Please select a folder"));
-          this.props.handleSettingDrive("");
-          return;
-        }
-      }
-      toast.loading(i18n.t("Adding"), { id: "adding-sync-id" });
-      let res = await encryptToken(settingDrive, {
-        drivePath: drivePath,
-      });
-      if (res.code === 200) {
-        toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
-      } else {
-        toast.error(i18n.t("Binding failed"), { id: "adding-sync-id" });
+    if (settingDrive === "folder") {
+      const ipcRenderer = window.electronAPI;
+      const drivePath = await ipcRenderer.invoke("select-path");
+      if (!drivePath) {
+        toast.error(i18n.t("Please select a folder"));
         this.props.handleSettingDrive("");
         return;
       }
+      toast.loading(i18n.t("Adding"), { id: "adding-sync-id" });
+      await TokenService.setToken(
+        settingDrive + "_token",
+        JSON.stringify({ drivePath })
+      );
+      toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
       SyncService.removeSyncUtil(settingDrive);
       removeCloudConfig(settingDrive);
       if (isElectron) {
@@ -176,7 +138,6 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
       ConfigService.setListConfig(settingDrive, "dataSourceList");
       toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
       if (
-        this.props.isAuthed &&
         !ConfigService.getItem("defaultSyncOption") &&
         settingDrive !== "microsoft_exp"
       ) {
@@ -248,7 +209,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     if (!this.props.isAuthed) {
       toast(this.props.t("Please upgrade to Pro to use this feature"));
       this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
+      this.props.handleSettingMode("general");
       return;
     }
 
@@ -308,7 +269,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     ) {
       toast(this.props.t("Please upgrade to Pro to use this feature"));
       this.props.handleSetting(true);
-      this.props.handleSettingMode("account");
+      this.props.handleSettingMode("general");
       return;
     }
     this.setState({
@@ -442,30 +403,24 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
     if (!flag) {
       return;
     }
-    if (
-      this.props.settingDrive === "webdav" ||
-      this.props.settingDrive === "docker" ||
-      this.props.settingDrive === "ftp" ||
-      this.props.settingDrive === "sftp" ||
-      this.props.settingDrive === "mega" ||
-      this.props.settingDrive === "s3compatible"
-    ) {
-      toast.loading(i18n.t("Adding"), { id: "adding-sync-id" });
-      let res = await encryptToken(
-        this.props.settingDrive,
-        this.state.driveConfig
-      );
-      if (res.code === 200) {
-        ConfigService.setListConfig(this.props.settingDrive, "dataSourceList");
-        toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
-      } else {
-        toast.error(i18n.t("Binding failed"), { id: "adding-sync-id" });
+    if (this.props.settingDrive === "webdav") {
+      const url = (this.state.driveConfig.url || "").trim();
+      if (!/^https:\/\//i.test(url)) {
+        toast.error(i18n.t("WebDAV requires HTTPS"));
+        return;
       }
-    } else {
-      await onSyncCallback(
-        this.props.settingDrive,
-        this.state.driveConfig.token
+      toast.loading(i18n.t("Adding"), { id: "adding-sync-id" });
+      await TokenService.setToken(
+        "webdav_token",
+        JSON.stringify(this.state.driveConfig)
       );
+      ConfigService.setListConfig("webdav", "dataSourceList");
+      toast.success(i18n.t("Binding successful"), { id: "adding-sync-id" });
+    } else {
+      // free-koodo-reader: only WebDAV and local folder are supported.
+      toast.error(i18n.t("Binding failed"), { id: "adding-sync-id" });
+      this.props.handleSettingDrive("");
+      return;
     }
     SyncService.removeSyncUtil(this.props.settingDrive);
     removeCloudConfig(this.props.settingDrive);
@@ -475,11 +430,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
         service: this.props.settingDrive,
       });
     }
-    if (
-      this.props.isAuthed &&
-      !ConfigService.getItem("defaultSyncOption") &&
-      this.props.settingDrive !== "microsoft_exp"
-    ) {
+    if (!ConfigService.getItem("defaultSyncOption")) {
       ConfigService.setItem("defaultSyncOption", this.props.settingDrive);
       if (ConfigService.getReaderConfig("isEnableKoodoSync") === "yes") {
         resetKoodoSync();
@@ -651,16 +602,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                 }
                 return true;
               })
-              .filter((item) => {
-                if (
-                  isElectron &&
-                  window.electronAPI?.runtime?.platform !== "darwin" &&
-                  item.value === "icloud"
-                ) {
-                  return false;
-                }
-                return true;
-              })
+              .filter(() => true)
               .map((item) => (
                 <div
                   className="account-login-option"
@@ -1025,16 +967,7 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
                 }
                 return true;
               })
-              .filter((item) => {
-                if (
-                  isElectron &&
-                  window.electronAPI?.runtime?.platform !== "darwin" &&
-                  item.value === "icloud"
-                ) {
-                  return false;
-                }
-                return true;
-              })
+              .filter(() => true)
               .map((item) => (
                 <option
                   value={item.value}
@@ -1141,8 +1074,8 @@ class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
           </select>
         </div>
 
-        {this.props.isAuthed && this.renderSwitchOption(syncSettingList)}
-        {this.props.isAuthed && (
+        {this.renderSwitchOption(syncSettingList)}
+        {(
           <>
             <div className="setting-dialog-new-title">
               <Trans>Scheduled sync interval</Trans>

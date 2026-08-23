@@ -40,13 +40,6 @@ export const popupList: PopupOptionItem[] = [
     defaultEnabled: true,
   },
   {
-    key: "translation",
-    name: "translation",
-    title: "Translate",
-    icon: "translation",
-    defaultEnabled: true,
-  },
-  {
     key: "copy",
     name: "copy",
     title: "Copy",
@@ -86,13 +79,6 @@ export const popupList: PopupOptionItem[] = [
     name: "speech-start",
     title: "Read from here",
     icon: "earphone",
-    defaultEnabled: true,
-  },
-  {
-    key: "assistant",
-    name: "assistant",
-    title: "Ask AI",
-    icon: "ai-assist",
     defaultEnabled: true,
   },
 ];

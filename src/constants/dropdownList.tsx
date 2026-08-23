@@ -412,12 +412,6 @@ export const titleSizeList = [
 export const ocrEngineList = [
   { label: "Please select", value: "", lang: "" },
   {
-    label: "Official AI OCR",
-    value: "official-ai-ocr",
-    lang: "general",
-    isPro: true,
-  },
-  {
     label: "System OCR",
     value: "system-ocr",
     lang: "auto",
@@ -431,5 +425,10 @@ export const ocrEngineList = [
     label: "Tesseract",
     value: "tesseract",
     lang: "chi_sim",
+  },
+  {
+    label: "External OCR API",
+    value: "external-ocr-api",
+    lang: "auto",
   },
 ];

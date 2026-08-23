@@ -9,10 +9,9 @@ jobs:
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
 
-    # Platforms to build on/for
     strategy:
       matrix:
-        os: [macos-26, ubuntu-22.04, windows-2022, ubuntu-24.04-arm]
+        os: [ubuntu-22.04, windows-2022, ubuntu-24.04-arm]
 
     steps:
       - name: Check out Git repository
@@ -31,41 +30,38 @@ jobs:
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v3
-        # Only install Snapcraft on Ubuntu
         if: startsWith(matrix.os, 'ubuntu-22.04')
+
       - name: Install Gcc
         if: startsWith(matrix.os, 'ubuntu-22.04')
         run: |
           sudo apt update
           sudo apt-get install gcc-multilib g++-multilib
+
       - name: Install FPM
         if: startsWith(matrix.os, 'ubuntu-24.04-arm')
         run: |
           sudo apt update
           sudo apt-get install -y ruby-full build-essential zlib1g-dev liblzma-dev
           sudo gem install --no-document fpm
-      - name: Prepare for app notarization (macOS)
-        if: startsWith(matrix.os, 'macos')
-        # Import Apple API key for app notarization on macOS
-        run: |
-          mkdir -p ~/private_keys/
-          echo ${{ github.ref }}
-          echo '${{ secrets.API_KEY }}' > ~/private_keys/AuthKey_${{ secrets.API_KEY_ID }}.p8
-          brew install python-setuptools
+
       - name: Set environment variable USE_SYSTEM_FPM
         if: startsWith(matrix.os, 'ubuntu-24.04-arm')
         run: echo "USE_SYSTEM_FPM=true" >> $GITHUB_ENV
+
       - name: Set environment variable USE_HARD_LINKS
         run: echo "USE_HARD_LINKS=false" >> $GITHUB_ENV
+
       - name: Modify package.json for dev branch
         if: github.ref == 'refs/heads/dev'
         shell: bash
         run: |
-          if [[ "${{ matrix.os }}" == "windows-22" ]]; then
-            powershell -Command "(Get-Content package.json) -replace '\"productName\": \"Koodo Reader\"', '\"productName\": \"Koodo Reader DEV\"' | Set-Content package.json"
+          if [[ "${{ matrix.os }}" == "windows-2022" ]]; then
+            powershell -Command "(Get-Content package.json) -replace '\"productName\": \"Free Koodo Reader\"', '\"productName\": \"Free Koodo Reader DEV\"' | Set-Content package.json"
           else
-            sed -i.bak 's/"productName": "Koodo Reader"/"productName": "Koodo Reader DEV"/' package.json
+            sed -i.bak 's/"productName": "Free Koodo Reader"/"productName": "Free Koodo Reader DEV"/' package.json
           fi
+
       - name: Modify package.json for Linux arm64 build
         if: startsWith(matrix.os, 'ubuntu-24.04-arm')
         run: |
@@ -75,26 +71,14 @@ jobs:
               "arch": ["arm64"]
             },
             {
-              "target": "AppImage", 
+              "target": "AppImage",
               "arch": ["arm64"]
             }
           ]' package.json > package.json.tmp && mv package.json.tmp package.json
+
       - name: Build/release Electron app
         uses: samuelmeuli/action-electron-builder@v1.6.0
         with:
           build_script_name: "build"
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
           github_token: ${{ secrets.github_token }}
-
-          # macOS code signing certificate
-          mac_certs: ${{ secrets.MAC_CERTS }}
-          mac_certs_password: ${{ secrets.MAC_CERTS_PASSWORD }}
-
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
           release: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        env:
-          # macOS notarization API key
-          API_KEY_ID: ${{ secrets.API_KEY_ID }}
-          API_KEY_ISSUER_ID: ${{ secrets.API_KEY_ISSUER_ID }}

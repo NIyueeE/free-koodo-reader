@@ -1,4 +1,4 @@
-﻿import Plugin from "../models/Plugin";
+import Plugin from "../models/Plugin";
 import { isElectron } from "react-device-detect";
 import CryptoJS from "crypto-js";
 import {
@@ -16,7 +16,6 @@ import toast from "react-hot-toast";
 import i18n from "../i18n";
 import {
   encryptToken,
-  getCloudSyncToken,
   refreshThirdToken,
 } from "./request/thirdparty";
 import {
@@ -27,7 +26,6 @@ import {
 import SyncService from "./storage/syncService";
 import localforage from "localforage";
 import { driveList } from "../constants/driveList";
-import { updateUserConfig } from "./request/user";
 import { languageCNMap, languageENMap } from "../constants/ttsList";
 import { BookHelper } from "../assets/lib/kookit.min";
 import {
@@ -1346,65 +1344,11 @@ export const clearAllData = async () => {
   await localforage.clear();
 };
 export const resetKoodoSync = async () => {
-  let encryptToken = await TokenService.getToken(
-    ConfigService.getItem("defaultSyncOption") + "_token"
-  );
-  await updateUserConfig({
-    is_enable_koodo_sync: "no",
-    default_sync_option: ConfigService.getItem("defaultSyncOption"),
-    default_sync_token: encryptToken || "",
-  });
-  setTimeout(() => {
-    updateUserConfig({
-      is_enable_koodo_sync: "yes",
-      default_sync_option: ConfigService.getItem("defaultSyncOption"),
-      default_sync_token: encryptToken || "",
-    });
-  }, 1000);
+  // free-koodo-reader: official Koodo Sync removed.
+  return;
 };
 export const handleAutoCloudSync = async () => {
-  let syncRes = await getCloudSyncToken();
-  if (
-    syncRes.code === 200 &&
-    syncRes.data.default_sync_option &&
-    syncRes.data.default_sync_option !== "icloud" &&
-    syncRes.data.default_sync_option !== "folder" &&
-    syncRes.data.default_sync_token
-  ) {
-    let supportedSources = driveList
-      .filter((item) => {
-        if (isElectron) {
-          return item.support.includes("desktop");
-        } else {
-          return item.support.includes("browser");
-        }
-      })
-      .map((item) => item.value);
-    if (!supportedSources.includes(syncRes.data.default_sync_option)) {
-      return false;
-    }
-    if (
-      !isElectron &&
-      (syncRes.data.default_sync_option === "webdav" ||
-        syncRes.data.default_sync_option === "s3compatible")
-    ) {
-      return false;
-    }
-    ConfigService.setItem(
-      "defaultSyncOption",
-      syncRes.data.default_sync_option
-    );
-    ConfigService.setReaderConfig("isEnableKoodoSync", "yes");
-    await TokenService.setToken(
-      syncRes.data.default_sync_option + "_token",
-      syncRes.data.default_sync_token
-    );
-    ConfigService.setListConfig(
-      syncRes.data.default_sync_option,
-      "dataSourceList"
-    );
-    return true;
-  }
+  // free-koodo-reader: official Koodo Sync removed.
   return false;
 };
 export const detectLocalLanguage = (text: string): string => {
@@ -1649,40 +1593,6 @@ export const findLastMatchIndex = (a: string[], b: string[]) => {
 
   return lastMatchIndex;
 };
-export const getICloudDrivePath = () => {
-  if (!isElectron) return "";
-  const fs = window.electronAPI.fs;
-  const path = window.electronAPI.path;
-  const os = window.electronAPI.os;
-
-  let iCloudPath = "";
-
-  // 自动检测iCloud Drive路径
-  if (isElectron && window.electronAPI?.runtime?.platform === "darwin") {
-    // macOS
-    const possiblePath = path.join(
-      os.homedir(),
-      "Library",
-      "Mobile Documents",
-      "iCloud~com~koodoreader~expo",
-      "Documents"
-    );
-    if (fs.existsSync(possiblePath)) {
-      iCloudPath = possiblePath;
-    }
-  }
-
-  // 如果自动检测失败，弹窗让用户手动选择
-  if (!iCloudPath || !fs.existsSync(iCloudPath)) {
-    return "";
-  }
-
-  // 验证路径是否有效
-  if (iCloudPath && fs.existsSync(iCloudPath)) {
-    return iCloudPath;
-  }
-  return "";
-};
 export const prepareThirdConfig = async (service: string, config: any) => {
   if (
     service === "adrive" ||
@@ -1746,20 +1656,7 @@ export const prepareThirdConfig = async (service: string, config: any) => {
       config.access_token = res.data.access_token;
       config.expires_at = new Date().getTime() + res.data.expires_in * 1000;
     }
-    let response: any = await encryptToken(service, config);
-    if (response.code === 200) {
-      if (
-        ConfigService.getReaderConfig("isEnableKoodoSync") === "yes" &&
-        ConfigService.getItem("defaultSyncOption") === service
-      ) {
-        let syncToken = await TokenService.getToken(service + "_token");
-        await updateUserConfig({
-          is_enable_koodo_sync: "yes",
-          default_sync_option: service,
-          default_sync_token: syncToken || "",
-        });
-      }
-    }
+    await encryptToken(service, config);
     SyncService.removeSyncUtil(service);
     removeCloudConfig(service);
     if (isElectron) {

@@ -8,7 +8,7 @@ import {
 } from "../../../store/actions";
 import { stateType } from "../../../store";
 import { withTranslation } from "react-i18next";
-import PopupTrans from "./component";
+import PopupDict from "./component";
 const mapStateToProps = (state: stateType) => {
   return {
     originalText: state.reader.originalText,
@@ -28,4 +28,4 @@ const actionCreator = {
 export default connect(
   mapStateToProps,
   actionCreator
-)(withTranslation()(PopupTrans as any) as any);
+)(withTranslation()(PopupDict as any) as any);
