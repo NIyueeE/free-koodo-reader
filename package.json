@@ -1,7 +1,7 @@
 {
   "name": "free-koodo-reader",
   "main": "main.js",
-  "version": "2.4.4",
+  "version": "3.0.0",
   "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
     "name": "Free Koodo Reader",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.564.0",
+    "@capacitor/core": "^8.0.0",
     "@mozilla/readability": "^0.6.0",
     "adm-zip": "^0.5.2",
     "axios": "0.31.1",
@@ -66,6 +67,8 @@
     "yazl": "^3.3.1"
   },
   "devDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
     "@types/copy-text-to-clipboard": "^2.0.4",
     "@types/file-saver": "^2.0.7",
     "@types/hammerjs": "^2.0.46",
@@ -114,6 +117,10 @@
     "dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://127.0.0.1:3000/ && nodemon --watch main.js --watch src/utils/plugins/main --ext js --exec electron .\"",
     "release": "electron-builder",
     "prerelease": "yarn build",
+    "android:sync": "cap sync android",
+    "android:build": "yarn build && cap sync android && cd android && ./gradlew assembleDebug",
+    "android:build:release": "yarn build && cap sync android && cd android && ./gradlew assembleRelease",
+    "cap": "cap",
     "postinstall": "node scripts/patch-nan.js && electron-builder install-app-deps",
     "rebuild": "electron-rebuild -f -w better-sqlite3"
   },

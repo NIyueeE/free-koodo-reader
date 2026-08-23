@@ -80,6 +80,11 @@ yarn release
 
 # 重新编译原生模块
 yarn rebuild
+
+# Android（Capacitor）
+yarn android:sync          # 同步 Web 构建到 Android 工程
+yarn android:build         # 构建 debug APK
+yarn android:build:release # 构建 release APK
 ```
 
 ## 开发规范
@@ -102,6 +107,8 @@ yarn rebuild
 ├── main.js                 # Electron 主进程
 ├── httpserver/             # Go HTTP 服务 (KOReader/OPDS)
 ├── public/                 # 静态资源 + WASM 库 (7z, unrar, pdfjs)
+├── android/                # Android 工程（Capacitor）
+├── capacitor.config.ts     # Capacitor 配置
 ├── src/
 │   ├── assets/
 │   │   ├── lib/            # 阅读引擎 (kookit-extra.min.mjs) + 类型定义

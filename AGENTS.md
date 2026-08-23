@@ -18,7 +18,7 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 ## 默认分支
 
 - 默认分支：`main`
-- 开发流程：在 `main` 上直接修改并推送，CI 会自动运行类型检查和构建。
+- 开发流程：在 `main` 上直接修改并推送，CI 会自动运行类型检查、Web 构建和 Android debug APK 构建。
 
 ## 关键约束
 
@@ -55,6 +55,9 @@ yarn build    # 生产构建
 yarn test     # 运行测试
 yarn release  # 打包分发
 yarn rebuild  # 重新编译原生模块
+yarn android:sync          # 同步 Web 构建到 Android 工程
+yarn android:build         # 构建 Android debug APK
+yarn android:build:release # 构建 Android release APK
 ```
 
 ## 项目结构（概要）
@@ -65,7 +68,7 @@ yarn rebuild  # 重新编译原生模块
 ├── main.js                 # Electron 主进程
 ├── httpserver/             # Go HTTP 服务 (KOReader/OPDS)
 ├── public/                 # 静态资源 + WASM 库
-├── android/                # Android 工程（Capacitor 生成，后续加入）
+├── android/                # Android 工程（Capacitor 生成）
 ├── src/
 │   ├── assets/             # 阅读引擎、多语言、样式、图片
 │   ├── components/         # 可复用 UI 组件

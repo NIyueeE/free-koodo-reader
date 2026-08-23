@@ -18,7 +18,7 @@
   - 漫画压缩包：CBR、CBZ、CBT、CB7
   - 富文本：MD、DOCX
   - 网页文本：HTML、XML、XHTML、MHTML、HTM
-- 平台支持：Windows、Linux、Web
+- 平台支持：Windows、Linux、Web、Android（Capacitor）
 - 同步 / 备份：
   - WebDAV（仅 HTTPS）
   - 本地文件夹
@@ -51,7 +51,20 @@ npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
 
 # 打包分发
 yarn release
+
+# Android（Capacitor）
+yarn android:sync          # 将 Web 构建同步到 Android 工程
+yarn android:build         # 构建 debug APK
+yarn android:build:release # 构建 release APK
 ```
+
+## CI/CD
+
+仓库使用 GitHub Actions：
+
+- `ci.yml` — 每次推送/PR 到 `main` 时执行类型检查、Web 生产构建和 Android debug APK 构建。
+- `release.yml` — 手动触发或推送 `v*` 标签时构建桌面端（Windows/Linux）和 Android 发布包。
+- `docker-publish.yml` — 发布 Docker 镜像。
 
 ## 仓库
 

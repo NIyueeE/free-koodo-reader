@@ -18,7 +18,7 @@ A local-first, privacy-friendly fork of [Koodo Reader](https://github.com/koodo-
   - Comic book archive: CBR, CBZ, CBT, CB7
   - Rich text: MD, DOCX
   - HyperText: HTML, XML, XHTML, MHTML, HTM
-- Platform support: Windows, Linux, and Web
+- Platform support: Windows, Linux, Web, and Android (Capacitor)
 - Sync / backup:
   - WebDAV (HTTPS only)
   - Local folder
@@ -51,7 +51,20 @@ npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
 
 # Package distribution
 yarn release
+
+# Android (Capacitor)
+yarn android:sync          # Sync the web build into the Android project
+yarn android:build         # Build a debug APK
+yarn android:build:release # Build a release APK
 ```
+
+## CI/CD
+
+The repository uses GitHub Actions:
+
+- `ci.yml` — typecheck, web production build, and Android debug APK on every push/PR to `main`.
+- `release.yml` — desktop (Windows/Linux) and Android release builds on workflow dispatch or version tags (`v*`).
+- `docker-publish.yml` — Docker image publishing.
 
 ## Repository
 

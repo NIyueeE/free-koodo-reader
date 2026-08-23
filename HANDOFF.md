@@ -6,9 +6,9 @@ This document records the current state of the project, the decisions already ma
 
 - Repository: https://github.com/NIyueeE/free-koodo-reader
 - Default branch: `main`
-- Latest release: `v2.4.4`
-- CI: typecheck + production build on every push/PR to `main`
-- Release workflow: Windows + Linux builds, published to GitHub Releases
+- Latest release: `v3.0.0`
+- CI: typecheck + production build + Android debug APK on every push/PR to `main`
+- Release workflow: Windows + Linux desktop builds + Android APK, published to GitHub Releases
 
 ### Completed
 
@@ -21,6 +21,9 @@ This document records the current state of the project, the decisions already ma
 - Local OCR (System OCR, PaddleOCR, Tesseract) and External OCR API retained.
 - Local MDX dictionary retained.
 - README / AGENTS / CI updated.
+- Capacitor 8 scaffold added (`capacitor.config.ts` + `android/` project).
+- Android CI/CD added: CI builds a debug APK; release workflow builds and attaches an Android APK.
+- Package version bumped to `3.0.0` for the first Android artifacts.
 
 ## 2. Current Architecture
 
@@ -175,7 +178,7 @@ Use Tauri 2 mobile with a Rust backend.
 
 Phased plan:
 
-1. **Phase 0 — Abstraction layer**
+1. **Phase 0 — Abstraction layer** (not started)
    - Create `src/platform/` with interfaces for:
      - FileSystem
      - Database
@@ -188,32 +191,33 @@ Phased plan:
    - Replace direct `window.electronAPI` calls with the platform service.
    - Keep desktop behavior identical.
 
-2. **Phase 1 — Capacitor scaffold**
+2. **Phase 1 — Capacitor scaffold** (done)
    - Add `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, and needed plugins.
    - Add `capacitor.config.ts`.
    - Configure `webDir` to `build`.
    - Create `android/` project.
 
-3. **Phase 2 — Android platform adapter**
+3. **Phase 2 — Android platform adapter** (not started)
    - Implement `CapacitorPlatform` for filesystem, SQLite (sql.js WASM or Capacitor SQLite), TTS, OCR, dialogs.
    - Replace `isElectron` branches with `isPlatform('android')` / `isNative`.
    - Adapt storage paths to Android app sandbox.
 
-4. **Phase 3 — Android-specific features**
+4. **Phase 3 — Android-specific features** (not started)
    - WebDAV sync should work directly in WebView.
    - Local MDX dictionary should work via file picker / app storage.
    - TTS: use Android TextToSpeech plugin; keep custom API voices.
    - OCR: keep Tesseract.js / PaddleOCR in WebView; optionally add native OCR.
    - Remove or disable desktop-only local folder sync.
 
-5. **Phase 4 — Package & signing**
-   - Set applicationId to a `free`-prefixed value, e.g. `xyz.freekoodo.reader`.
-   - Create a dedicated Android signing keystore (`free-koodo-reader.keystore`).
-   - Add Android release workflow in CI.
+5. **Phase 4 — Package & signing** (partially done)
+   - Set applicationId to a `free`-prefixed value, e.g. `xyz.freekoodo.reader` (done).
+   - Create a dedicated Android signing keystore (`free-koodo-reader.keystore`) (pending).
+   - Add Android release workflow in CI (done; release builds use debug signing until a store keystore is configured).
 
-6. **Phase 5 — Verification**
-   - Run existing web tests/typecheck/build.
-   - Manual test on Android emulator/device:
+6. **Phase 5 — Verification** (partially done)
+   - Run existing web tests/typecheck/build (done in CI).
+   - Build Android APK in CI (done).
+   - Manual test on Android emulator/device (pending):
      - Import books
      - Read EPUB/PDF/TXT
      - WebDAV sync
@@ -232,11 +236,10 @@ Phased plan:
 ## 8. Next Steps
 
 1. Create the platform abstraction layer in `src/platform/`.
-2. Add Capacitor to the project.
-3. Generate the Android project.
-4. Implement the Android platform adapter.
-5. Build a first debug APK.
-6. Then move to release signing and CI.
+2. Implement the Android platform adapter (`CapacitorPlatform`).
+3. Adapt Android-specific features (file picker, TTS, OCR, storage paths).
+4. Add a dedicated release keystore and wire it into CI signing.
+5. Manual test on Android emulator/device.
 
 ## 9. Open Questions
 
