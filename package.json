@@ -4,14 +4,14 @@
   "version": "2.4.4",
   "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
-    "name": "App by Troye",
+    "name": "Free Koodo Reader",
     "email": "NIyueeE@users.noreply.github.com"
   },
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=6.0.0"
   },
-  "repository": "https://github.com/koodo-reader/koodo-reader",
+  "repository": "https://github.com/NIyueeE/free-koodo-reader",
   "private": false,
   "resolutions": {
     "@types/react": "^18.3.1",
