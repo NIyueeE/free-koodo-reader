@@ -83,11 +83,9 @@ let mainView;
 //multi tab
 // let mainViewList = []
 let readerWindowReadyToClose = false;
-let chatWindow;
 let dbConnection = {};
 let syncUtilCache = {};
 let pickerUtilCache = {};
-let downloadRequest = null;
 
 const RESIZE_THROTTLE_MS = 300;
 
@@ -1306,16 +1304,6 @@ const createMainWin = () => {
       stream.on("end", () => resolve(hash.digest("hex")));
     });
   });
-  ipcMain.handle("cancel-download-app", (event, arg) => {
-    // Implement cancellation logic here
-    // Note: In this example, we are not keeping a reference to the request,
-    // so we cannot actually abort it. This is a placeholder for demonstration.
-    if (downloadRequest) {
-      downloadRequest.abort();
-      downloadRequest = null;
-    }
-    event.returnValue = "cancelled";
-  });
   // Discord RPC handlers
   ipcMain.handle("discord-rpc-update", async (event, config) => {
     const { bookTitle, author, percentage } = config;
@@ -1334,8 +1322,8 @@ const createMainWin = () => {
         instance: false,
         buttons: [
           {
-            label: "Get Koodo Reader",
-            url: "https://koodoreader.com",
+            label: "Get Free Koodo Reader",
+            url: "https://github.com/NIyueeE/free-koodo-reader",
           },
         ],
       });
@@ -1351,70 +1339,6 @@ const createMainWin = () => {
         console.warn("Failed to clear Discord activity:", e.message);
       }
     }
-  });
-  ipcMain.handle("update-win-app", (event, config) => {
-    let fileName = `koodo-reader-installer.exe`;
-    let supportedArchs = ["x64", "ia32", "arm64"];
-    //get system arch
-    let arch = os.arch();
-    if (!supportedArchs.includes(arch)) {
-      return;
-    }
-
-    let url = `https://dl.koodoreader.com/v${config.version}/Koodo-Reader-${config.version}-${arch}.exe`;
-    const https = require("https");
-    const { spawn } = require("child_process");
-    const file = fs.createWriteStream(path.join(app.getPath("temp"), fileName));
-    downloadRequest = https.get(url, (res) => {
-      const totalSize = parseInt(res.headers["content-length"], 10);
-      let downloadedSize = 0;
-      res.on("data", (chunk) => {
-        downloadedSize += chunk.length;
-        const progress = ((downloadedSize / totalSize) * 100).toFixed(2);
-        const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(2);
-        const totalMB = (totalSize / 1024 / 1024).toFixed(2);
-        mainWin.webContents.send("download-app-progress", {
-          progress,
-          downloadedMB,
-          totalMB,
-        });
-      });
-
-      res.pipe(file);
-      file.on("finish", () => {
-        console.info("\n下载完成！");
-        file.close();
-
-        let updateExePath = path.join(app.getPath("temp"), fileName);
-        if (!fs.existsSync(updateExePath)) {
-          console.error("更新包不存在:", updateExePath);
-          return;
-        }
-        // 验证文件可执行性
-        try {
-          fs.accessSync(updateExePath, fs.constants.X_OK);
-          console.info("更新包可执行性验证通过");
-        } catch (err) {
-          console.error("更新包不可执行:", err.message);
-          return;
-        }
-        try {
-          // 先退出应用，再启动安装程序，避免文件锁定导致覆盖安装失败
-          app.once("will-quit", () => {
-            const child = spawn(updateExePath, [], {
-              stdio: "ignore",
-              detached: true,
-              shell: true,
-              windowsHide: false,
-            });
-            child.unref();
-          });
-          app.quit();
-        } catch (err) {
-          console.error(`spawn 执行异常: ${err.message}`);
-        }
-      });
-    });
   });
   ipcMain.handle("open-book", (event, config) => {
     let { url, isMergeWord, isAutoFullscreen, isAutoMaximize, isPreventSleep } =
@@ -1546,105 +1470,6 @@ const createMainWin = () => {
     });
 
     event.returnValue = "success";
-  });
-  ipcMain.handle("ai-request", async (event, payload) => {
-    const { url, method, headers, body } = payload || {};
-    const response = await net.fetch(url, {
-      method,
-      headers: headers || undefined,
-      body: method === "POST" ? body : undefined,
-    });
-    const responseText = await response.text();
-    return {
-      ok: response.ok,
-      status: response.status,
-      statusText: response.statusText,
-      body: responseText,
-    };
-  });
-  ipcMain.handle("ai-chat-stream", async (event, payload) => {
-    console.log("Received ai-chat-stream request:", payload);
-    const { streamId, url, headers, body } = payload || {};
-    let response;
-    try {
-      response = await net.fetch(url, {
-        method: "POST",
-        headers: headers || undefined,
-        body: body || undefined,
-      });
-    } catch (err) {
-      event.sender.send("ai-chat-error", {
-        streamId,
-        error: String(err?.message || err),
-      });
-      return { ok: false };
-    }
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      event.sender.send("ai-chat-error", {
-        streamId,
-        status: response.status,
-        statusText: response.statusText,
-        body: errorBody,
-      });
-      return { ok: false };
-    }
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-    let dataLines = [];
-    let finished = false;
-    const flush = () => {
-      if (dataLines.length === 0) return;
-      const data = dataLines.join("\n");
-      dataLines = [];
-      if (data === "[DONE]") {
-        finished = true;
-        return;
-      }
-      try {
-        const json = JSON.parse(data);
-        const text = json?.choices?.[0]?.delta?.content;
-        if (text) {
-          event.sender.send("ai-chat-chunk", { streamId, text });
-        }
-      } catch {
-        // 忽略无法解析的 data 行
-      }
-    };
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        let idx;
-        while ((idx = buffer.indexOf("\n")) >= 0) {
-          const line = buffer.slice(0, idx).replace(/\r$/, "");
-          buffer = buffer.slice(idx + 1);
-          if (line === "") {
-            flush();
-            if (finished) break;
-          } else if (line.startsWith("data:")) {
-            dataLines.push(line.slice(5).replace(/^ /, ""));
-          }
-        }
-        if (finished) break;
-      }
-      if (!finished) flush();
-      event.sender.send("ai-chat-done", { streamId });
-    } catch (err) {
-      event.sender.send("ai-chat-error", {
-        streamId,
-        error: String(err?.message || err),
-      });
-    } finally {
-      try {
-        reader.releaseLock();
-      } catch {
-        // 忽略释放锁失败
-      }
-    }
-    return { ok: true };
   });
   ipcMain.handle("generate-tts", async (event, voiceConfig) => {
     const { text, speed, pluginKey, config } = voiceConfig || {};
@@ -2460,40 +2285,6 @@ const createMainWin = () => {
     }
   });
 
-  ipcMain.handle("new-chat", (event, config) => {
-    if (!chatWindow && mainWin) {
-      let bounds = mainWin.getBounds();
-      chatWindow = new BrowserWindow({
-        ...options,
-        width: 450,
-        height: bounds.height,
-        x: bounds.x + (bounds.width - 450),
-        y: bounds.y,
-        frame: true,
-        hasShadow: true,
-        transparent: false,
-        webPreferences: {
-          ...options.webPreferences,
-          nodeIntegration: false,
-          contextIsolation: true,
-          preload: path.join(__dirname, "chat-preload.js"),
-        },
-      });
-      chatWindow.loadURL(config.url);
-      chatWindow.on("close", (event) => {
-        chatWindow && chatWindow.destroy();
-        chatWindow = null;
-      });
-    } else if (chatWindow && !chatWindow.isDestroyed()) {
-      chatWindow.show();
-      chatWindow.focus();
-    }
-  });
-  ipcMain.on("chat-message", (event, msg) => {
-    if (mainWin && !mainWin.isDestroyed()) {
-      mainWin.webContents.send("chat-message", msg);
-    }
-  });
   ipcMain.handle("clear-all-data", (event, config) => {
     store.clear();
   });

@@ -19,7 +19,6 @@ import { isElectron } from "react-device-detect";
 import toast from "react-hot-toast";
 import TTSUtil from "../../utils/reader/ttsUtil";
 import "./textToSpeech.css";
-import { fetchUserInfo } from "../../utils/request/user";
 import { Howl } from "howler";
 declare var window: any;
 class TextToSpeech extends React.Component<
@@ -303,7 +302,6 @@ class TextToSpeech extends React.Component<
         toast(this.props.t("Please upgrade to Pro to use this feature"));
         return;
       }
-      await fetchUserInfo();
     }
 
     const plugin = this.props.plugins.find((item) => item.key === engine);
@@ -388,7 +386,6 @@ class TextToSpeech extends React.Component<
       toast.loading(this.props.t("Loading audio, please wait..."), {
         id: "tts-load",
       });
-      await fetchUserInfo();
     }
     if (
       ConfigService.getReaderConfig("voiceEngine") ===
@@ -512,7 +509,6 @@ class TextToSpeech extends React.Component<
       toast.loading(this.props.t("Loading audio, please wait..."), {
         id: "tts-load",
       });
-      await fetchUserInfo();
     }
 
     // 非多角色模式下，将 nodeList 所有节点更新为新语音

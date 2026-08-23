@@ -1,20 +1,20 @@
 blank_issues_enabled: false
 contact_links:
   - name: General Inquiry
-    url: https://koodoreader.com/en/support
+    url: https://github.com/NIyueeE/free-koodo-reader/issues
     about: Have questions or need help using Koodo Reader.
   - name: 问题咨询
-    url: https://koodoreader.com/zh/support
+    url: https://github.com/NIyueeE/free-koodo-reader/issues
     about: 有疑问或需要帮助
   - name: Report Issue
-    url: https://koodoreader.com/en/support
+    url: https://github.com/NIyueeE/free-koodo-reader/issues
     about: Encountered a bug or technical problem
   - name: 报告问题
-    url: https://koodoreader.com/zh/support
+    url: https://github.com/NIyueeE/free-koodo-reader/issues
     about: 遇到错误或技术问题
   - name: Feature Request
-    url: https://koodoreader.com/en/support
+    url: https://github.com/NIyueeE/free-koodo-reader/issues
     about: Have an idea for a new feature or improvement
   - name: 功能建议
-    url: https://koodoreader.com/zh/support
+    url: https://github.com/NIyueeE/free-koodo-reader/issues
     about: 希望添加新功能或觉得需要改进

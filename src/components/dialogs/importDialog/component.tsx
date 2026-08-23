@@ -9,18 +9,10 @@ import { isElectron } from "react-device-detect";
 import { getCloudConfig } from "../../../utils/file/common";
 import SyncService from "../../../utils/storage/syncService";
 import {
-  getServerRegion,
   getStorageLocation,
-  openExternalUrl,
-  openInBrowser,
   showDownloadProgress,
   supportedFormats,
 } from "../../../utils/common";
-import {
-  KookitConfig,
-  SyncUtil,
-} from "../../../assets/lib/kookit-extra-browser.min";
-import { GooglePickerUtil } from "../../../utils/file/googlePicker";
 declare var window: any;
 type FileInfo = {
   name: string;
@@ -33,7 +25,6 @@ class ImportDialog extends React.Component<
   ImportDialogProps,
   ImportDialogState
 > {
-  googlePickerUtil: any;
   constructor(props: ImportDialogProps) {
     super(props);
     this.state = {
@@ -284,97 +275,6 @@ class ImportDialog extends React.Component<
 
     return allFiles;
   };
-  // 新增Google Picker处理方法
-  handleGooglePicker = async () => {
-    try {
-      if (isElectron) {
-        toast.loading(
-          this.props.t("Please select the books in the Google Drive Picker"),
-          {
-            id: "google-picker",
-          }
-        );
-      }
-      let pickerUtil: any = await SyncService.getPickerUtil("google");
-      this.googlePickerUtil = new GooglePickerUtil({
-        accessToken: pickerUtil.remote.config.access_token,
-        apiKey: "",
-        appId: "1051055003225",
-      });
-      toast.dismiss("google-picker");
-
-      if (isElectron) {
-        openExternalUrl(
-          "https://dl.koodoreader.com/websites/google-picker.html?access_token=" +
-            pickerUtil.remote.config.access_token
-        );
-        const ipcRenderer = window.electronAPI;
-        ipcRenderer.once("picker-finished", async (config: any) => {
-          if (config && config.action === "picked" && config.docs) {
-            for (const file of config.docs) {
-              await this.handleImportGoogleFile(file);
-            }
-          }
-        });
-      } else {
-        await this.googlePickerUtil.createPicker(this.handlePickerCallback);
-      }
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : String(error));
-      console.error("Error creating Google Picker:", error);
-      toast.error(this.props.t("Failed to open Google Picker"));
-    }
-  };
-
-  // Google Picker回调处理
-  handlePickerCallback = async (data: any) => {
-    if (data.action === window.google.picker.Action.PICKED) {
-      const files = data.docs;
-      for (const file of files) {
-        await this.handleImportGoogleFile(file);
-      }
-    }
-  };
-
-  // 处理Google文件导入
-  handleImportGoogleFile = async (googleFile: any) => {
-    try {
-      // 检查文件格式
-      const fileExtension =
-        "." + googleFile.name.split(".").pop()?.toLowerCase();
-      if (!supportedFormats.includes(fileExtension)) {
-        toast.error(
-          this.props.t("Unsupported file format") + ": " + fileExtension
-        );
-        return;
-      }
-
-      toast.loading(this.props.t("Downloading") + ": " + googleFile.name, {
-        id: "google-download-" + googleFile.id,
-      });
-
-      // 下载文件
-      const arrayBuffer = await this.googlePickerUtil.downloadFile(
-        googleFile.id
-      );
-      const blob = new Blob([arrayBuffer]);
-      const file = new File([blob], googleFile.name);
-
-      toast.dismiss("google-download-" + googleFile.id);
-
-      await this.props.importBookFunc(file);
-    } catch (error) {
-      toast.error(
-        "Error importing Google file: " +
-          (error instanceof Error ? error.message : String(error)),
-        {
-          id: "google-download-" + googleFile.id,
-        }
-      );
-      console.error("Error importing Google file:", error);
-      toast.error(this.props.t("Failed to import") + ": " + googleFile.name);
-    }
-  };
   render() {
     return (
       <div
@@ -398,51 +298,10 @@ class ImportDialog extends React.Component<
                     key={item.value}
                     className={`cloud-drive-item `}
                     onClick={() => {
-                      if (item.isPro && !this.props.isAuthed) {
-                        toast(
-                          this.props.t(
-                            "Please upgrade to Pro to use this feature"
-                          )
-                        );
-                        this.props.handleSetting(true);
-                        this.props.handleSettingMode("general");
-                        return;
-                      }
-
                       if (!this.props.dataSourceList.includes(item.value)) {
                         this.props.handleSetting(true);
                         this.props.handleSettingMode("sync");
                         this.props.handleSettingDrive(item.value);
-                        let settingDrive = item.value;
-                        if (
-                          settingDrive === "dropbox" ||
-                          settingDrive === "yandex" ||
-                          settingDrive === "yiyiwu" ||
-                          settingDrive === "dubox" ||
-                          settingDrive === "google" ||
-                          settingDrive === "boxnet" ||
-                          settingDrive === "pcloud" ||
-                          settingDrive === "adrive" ||
-                          settingDrive === "microsoft_exp" ||
-                          settingDrive === "microsoft"
-                        ) {
-                          openInBrowser(
-                            new SyncUtil(settingDrive, {}).getAuthUrl(
-                              getServerRegion() === "china" &&
-                                (settingDrive === "microsoft" ||
-                                  settingDrive === "microsoft_exp" ||
-                                  settingDrive === "dubox" ||
-                                  settingDrive === "yiyiwu" ||
-                                  settingDrive === "adrive")
-                                ? KookitConfig.ThirdpartyConfig.cnCallbackUrl
-                                : KookitConfig.ThirdpartyConfig.callbackUrl
-                            )
-                          );
-                        }
-                        return;
-                      }
-                      if (item.value === "google") {
-                        this.handleGooglePicker();
                         return;
                       }
                       this.setState({

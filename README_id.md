@@ -5,7 +5,7 @@
 </div>
 
 <div align="center">
-  <img src="https://dl.koodoreader.com/screenshots/logo.png" width="96px" height="96px"/>
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/logo.png" width="96px" height="96px"/>
 </div>
 
 <h1 align="center">
@@ -18,7 +18,7 @@
 
 <div align="center">
 
-[Unduh](https://koodoreader.com/en) | [Pratinjau](https://web.koodoreader.com) | [Roadmap](https://koodoreader.com/en/roadmap) | [Dokumentasi](https://koodoreader.com/en/document)
+[Unduh](https://github.com/NIyueeE/free-koodo-reader/en) | [Pratinjau](https://github.com/NIyueeE/free-koodo-reader) | [Roadmap](https://github.com/NIyueeE/free-koodo-reader/en/roadmap) | [Dokumentasi](https://github.com/NIyueeE/free-koodo-reader/en/document)
 
 </div>
 
@@ -27,10 +27,10 @@
 <div align="center">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/7.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/7.png" width="800px">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/8.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/8.png" width="800px">
   <br/>
   <br/>
 </div>
@@ -59,9 +59,9 @@
 ## Instalasi
 
 - Versi Desktop:
-  - Versi stabil (Disarankan): [Unduh](https://koodoreader.com/en)
+  - Versi stabil (Disarankan): [Unduh](https://github.com/NIyueeE/free-koodo-reader/en)
   - Versi pengembang: [Unduh](https://github.com/koodo-reader/koodo-reader/releases/latest) (Memiliki fitur baru dan perbaikan bug, tetapi mungkin masih mengandung beberapa masalah yang belum diketahui)
-- Versi Web: [Pratinjau](https://web.koodoreader.com)
+- Versi Web: [Pratinjau](https://github.com/NIyueeE/free-koodo-reader)
 - Instal dengan Scoop:
 
 ```shell
@@ -95,7 +95,7 @@ brew install --cask koodo-reader
 
 - Instal dengan Docker:
 
-[Installation Guide](https://koodoreader.com/en/deploy-docker)
+[Installation Guide](https://github.com/NIyueeE/free-koodo-reader/en/deploy-docker)
 
 ## Tangkapan Layar
 
@@ -103,37 +103,37 @@ brew install --cask koodo-reader
   <b>Daftar buku</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/1.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/1.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>tampilan buku</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/5.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/5.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Mode daftar</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/2.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/2.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Mode sampul</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/3.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/3.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Opsi membaca</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/6.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/6.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Mode gelap dan warna tema</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/4.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/4.png" width="800px"></kbd>
   <br/>
   <br/>
 </div>

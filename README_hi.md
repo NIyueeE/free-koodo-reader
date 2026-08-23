@@ -5,7 +5,7 @@
 </div>
 
 <div align="center" >
-  <img src="https://dl.koodoreader.com/screenshots/logo.png" width="96px" height="96px"/>
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/logo.png" width="96px" height="96px"/>
 </div>
 
 <h1 align="center">
@@ -17,7 +17,7 @@
 </h3>
 <div align="center">
 
-[डाउनलोड](https://koodoreader.com/en) | [समीक्षा](https://web.koodoreader.com) | [रोडमैप](https://koodoreader.com/en/roadmap) | [आलेख](https://koodoreader.com/en/document)
+[डाउनलोड](https://github.com/NIyueeE/free-koodo-reader/en) | [समीक्षा](https://github.com/NIyueeE/free-koodo-reader) | [रोडमैप](https://github.com/NIyueeE/free-koodo-reader/en/roadmap) | [आलेख](https://github.com/NIyueeE/free-koodo-reader/en/document)
 
 </div>
 
@@ -26,10 +26,10 @@
 <div align="center">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/7.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/7.png" width="800px">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/8.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/8.png" width="800px">
   <br/>
   <br/>
 </div>
@@ -58,9 +58,9 @@
 ## इंस्टालेशन
 
 - डेस्कटॉप संस्करण:
-  - स्थिर संस्करण (अनुशंसित): [डाउनलोड](https://koodoreader.com/en)
+  - स्थिर संस्करण (अनुशंसित): [डाउनलोड](https://github.com/NIyueeE/free-koodo-reader/en)
   - डेवलपर संस्करण: [डाउनलोड](https://github.com/koodo-reader/koodo-reader/releases/latest) ( नई सुविधा और बग फिक्स के साथ, लेकिन कुछ अज्ञात बग उत्पन्न हो सकते हैं)
-- वेब संस्करण：[समीक्षा](https://web.koodoreader.com)
+- वेब संस्करण：[समीक्षा](https://github.com/NIyueeE/free-koodo-reader)
 - स्कूप के साथ इंस्टाल करें:
 
 ```shell
@@ -94,7 +94,7 @@ brew install --cask koodo-reader
 
 - डॉकर के साथ इंस्टॉल करें:
 
-[Installation Guide](https://koodoreader.com/en/deploy-docker)
+[Installation Guide](https://github.com/NIyueeE/free-koodo-reader/en/deploy-docker)
 
 ## स्क्रीनशॉट
 
@@ -102,37 +102,37 @@ brew install --cask koodo-reader
   <b>पुस्तक सूची</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/1.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/1.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>पुस्तक प्रदर्शन</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/5.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/5.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>सूची मोड</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/2.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/2.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>कवर मोड</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/3.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/3.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>पाठक मेनू</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/6.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/6.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>डार्क मोड</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/4.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/4.png" width="800px"></kbd>
   <br/>
 </div>
 

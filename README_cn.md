@@ -1,187 +1,64 @@
-<div align="left">
+# Free Koodo Reader
 
-简体中文 | [हिंदी](./README_hi.md) |[Português](./README_pt.md) | [English](./README.md) | [Indonesian](./README_id.md)
+一个本地优先、注重隐私的 [Koodo Reader](https://github.com/koodo-reader/koodo-reader) 分支。保留强大的跨平台电子书阅读体验，同时移除官方云服务、账号、Pro 付费和 AI 云功能。
 
-</div>
+## 本分支特点
 
-<div align="center">
-  <img src="https://dl.koodoreader.com/screenshots/logo.png" width="96px" height="96px"/>
-</div>
+- 无登录 / 账号 / Pro / 付费系统
+- 无官方 Koodo 云同步和 AI 服务
+- 无 macOS 构建产物和 Apple 相关兼容代码
+- WebDAV 同步使用开源 `webdav` 包实现，且**仅支持 HTTPS**
+- 云凭据本地存储并加密
+- 仍然支持本地文件夹同步
 
-<h1 align="center">
-  Koodo Reader
-</h1>
+## 功能
 
-<h3 align="center">
-  一个跨平台的电子书阅读器
-</h3>
+- 格式支持：
+  - EPUB、PDF、MOBI、AZW3、AZW、TXT、FB2
+  - 漫画压缩包：CBR、CBZ、CBT、CB7
+  - 富文本：MD、DOCX
+  - 网页文本：HTML、XML、XHTML、MHTML、HTM
+- 平台支持：Windows、Linux、Web
+- 同步 / 备份：
+  - WebDAV（仅 HTTPS）
+  - 本地文件夹
+- TTS：
+  - 系统本地语音
+  - 自定义 TTS API / 自托管语音插件
+- OCR：
+  - 系统 OCR（Windows）
+  - 本地 OCR（PaddleOCR、Tesseract）
+  - 外部 OCR API
+- 本地 MDX 词典支持
 
-<div align="center">
+## 快速开始
 
-[下载客户端](https://koodoreader.com/zh) | [在线预览](https://web.koodoreader.com) | [开发计划](https://koodoreader.com/zh/roadmap) | [帮助文档](https://koodoreader.com/zh/document) | [插件列表](https://koodoreader.com/zh/plugin)
+```bash
+# 安装依赖
+yarn
 
-</div>
+# 桌面开发模式（Electron + React 热重载）
+yarn dev
 
-## 预览
+# Web 开发模式（仅浏览器）
+yarn start
 
-<div align="center">
-  <br/>
-  <br/>
-  <img src="https://dl.koodoreader.com/screenshots/7.png" width="800px">
-  <br/>
-  <br/>
-  <img src="https://dl.koodoreader.com/screenshots/8.png" width="800px">
-  <br/>
-  <br/>
-</div>
+# 生产构建
+yarn build
 
-## 特色
+# 类型检查
+npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
 
-- 支持阅读格式：
-  - EPUB (**.epub**)
-  - PDF (**.pdf**)
-  - Kindle (**.azw3**, **.mobi**, **.azw**)
-  - 纯文本 (**.txt**)
-  - 漫画 (**.cbr**, **.cbz**, **.cbt**, **.cb7**)
-  - 富文本 (**.md**, **.docx**)
-  - FB2 (**.fb2**)
-  - 超文本 (**.html**, **.xml**, **.xhtml**, **.mhtml**, **.htm**)
-- 支持 **Windows**，**macOS**，**Linux** ，**安卓** ，**iOS** 和 **网页版**
-- 利用 **OneDrive**, **Google Drive**, **Dropbox**, **iCloud**, **MEGA**, **pCloud**, **阿里云盘**, **百度网盘**, **115 网盘**, **Box**, **Yandex Disk**, **FTP**, **SFTP**, **SMB**, **Docker**, **WebDAV**, **对象存储** 实现数据多端同步和备份
-- 轻松从 **OneDrive**, **Google Drive**, **MEGA**, **阿里云盘**, **百度网盘**, **115 网盘**, **Box**, **Yandex Disk**, **FTP**, **SFTP**, **SMB**, **WebDAV**, **对象存储** 导入图书
-- 使用您的自定义 AI 模型，实现 AI 翻译、AI 词典、AI 总结与 AI 百科
-- 与 **KOReader** 同步图书阅读进度
-- 将笔记与高亮同步至 **Readwise**、**Notion**、**Obsidian**、**Joplin** 等三方平台
-- 支持本地 MDX 词典查词
-- 自动同步生词到 **Anki** 与**欧路词典**
-- 通过密码、PIN 码、Windows Hello、Touch ID 等多重方式保护您的图书库
-- 一键导出全部图书
-- 一键导出笔记与高亮，支持 **CSV**、**Markdown**、**HTML**、**TXT** 等格式
-- 隐私优先，不使用任何追踪服务，不主动上传您的阅读数据与隐私信息
-- 支持 **OPDS** 协议，并可将您的书库以 **OPDS** 形式分享
-- 支持浏览器扩展，可将网页文章剪藏到您的书库
-- 内置 50+ 翻译、词典及听书插件，并支持自定义插件
-- 支持竖排图书阅读
-- 支持阅读统计功能
-- 内置 **Paddle** 与 **Tesseract** OCR 引擎
-- 支持图书库快照与版本控制
-- 双页模式，单页模式，滚动模式
-- 听书功能，翻译功能，词典功能，触控屏支持，批量导入图书
-- 支持目录，书签，笔记，高亮，书架，标签
-- 自定义字体，字体大小，行间距，段落间距，阅读背景色，文字颜色，屏幕亮度，文字下划线、斜体、文字阴影、字体粗细
-- 黑夜模式和主题色设置
-
-## 使用方法
-
-### 桌面端：[下载](https://koodoreader.com/zh/download)
-
-### 网页版：[前往](https://web.koodoreader.com)
-
-### 安卓版：[下载](https://koodoreader.com/zh/download)
-
-### iOS 版：[下载](https://koodoreader.com/zh/download)
-
-### 浏览器拓展：[下载](https://www.koodoreader.com/zh/use-extension)
-
-### 使用 Scoop 安装：
-
-```shell
-scoop bucket add extras
-scoop install extras/koodo-reader
+# 打包分发
+yarn release
 ```
 
-### 使用 Winget 安装：
+## 仓库
 
-```shell
-winget install AppByTroye.KoodoReader
-```
+- GitHub：https://github.com/NIyueeE/free-koodo-reader
+- 默认分支：`main`
+- 问题 / 反馈：https://github.com/NIyueeE/free-koodo-reader/issues
 
-### 使用 Flathub 安装：
+## 许可证
 
-```shell
-flatpak install flathub io.github.troyeguo.koodo-reader
-```
-
-### 使用 Snap Store 安装：
-
-```shell
-sudo snap install koodo-reader
-```
-
-### 使用 Homebrew 安装：
-
-```shell
-brew install --cask koodo-reader
-```
-
-### 使用 Docker 安装：
-
-[部署教程](https://koodoreader.com/zh/deploy-docker)
-
-## 截图
-
-<div align="center">
-  <b>图书列表</b>
-  <br/>
-  <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/1.png" width="800px"></kbd>
-  <br/>
-  <br/>
-  <b>图书展示</b>
-  <br/>
-  <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/5.png" width="800px"></kbd>
-  <br/>
-  <br/>
-  <b>列表模式</b>
-  <br/>
-  <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/2.png" width="800px"></kbd>
-  <br/>
-  <br/>
-  <b>封面模式</b>
-  <br/>
-  <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/3.png" width="800px"></kbd>
-  <br/>
-  <br/>
-  <b>阅读菜单</b>
-  <br/>
-  <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/6.png" width="800px"></kbd>
-  <br/>
-  <br/>
-  <b>黑夜模式</b>
-  <br/>
-  <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/4.png" width="800px"></kbd>
-  <br/>
-  <br/>
-</div>
-
-## 运行源码
-
-> [!NOTE]
-> 本仓库仅包含桌面版与网页版的源代码，不涉及移动端源码。我们所有项目均未使用任何基于 GPL 或 AGPL 协议发布的第三方库，因此不受相关开源协议传染性条款的约束，亦无公开移动版源代码的义务。此外，项目早期由外部贡献者提交的代码现已全部重写或移除，我们对自有代码的处理无需征得他人同意。本项目采用 AGPL 开源协议，该协议主要约束基于本项目代码进行二次开发的衍生作品，而非限制版权所有者自身的权利。作为完整版权持有者，我们有权自主决定是否以及以何种方式公开源代码。
-
-请确保您电脑已配置好 yarn，git 的运行环境。
-
-1. 将项目源码下载到本地
-
-   ```
-   git clone https://github.com/koodo-reader/koodo-reader.git
-   ```
-
-2. cd 到项目文件夹，运行以下代码进入客户端模式
-
-   ```
-   yarn
-   yarn dev
-   ```
-
-3. 运行以下代码进入网页模式
-
-   ```
-   yarn
-   yarn start
-   ```
+本项目基于 Koodo Reader，使用 AGPL-3.0 许可证。详见 [LICENSE](./LICENSE)。

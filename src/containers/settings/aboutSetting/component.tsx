@@ -8,7 +8,6 @@ import packageJson from "../../../../package.json";
 import { getWebsiteUrl, openExternalUrl } from "../../../utils/common";
 import copyTextToClipboard from "copy-text-to-clipboard";
 import { isElectron } from "react-device-detect";
-import { checkDeveloperUpdate } from "../../../utils/request/common";
 declare var window: any;
 
 class AboutSetting extends React.Component<SettingInfoProps, SettingInfoState> {
@@ -29,46 +28,10 @@ class AboutSetting extends React.Component<SettingInfoProps, SettingInfoState> {
               <span
                 className="change-location-button"
                 style={{ marginLeft: "10px", cursor: "pointer" }}
-                onClick={async () => {
-                  toast.loading(this.props.t("Checking for update") + "...", {
-                    id: "checking_update",
-                  });
-                  let res = await checkDeveloperUpdate();
-                  const newVersion = res.version;
-                  if (newVersion === packageJson.version) {
-                    toast.success(
-                      this.props.t("You are using the latest version"),
-                      {
-                        id: "checking_update",
-                      }
-                    );
-                  } else {
-                    toast.success(
-                      this.props.t("A new version is available") +
-                        ": " +
-                        newVersion,
-                      {
-                        id: "checking_update",
-                      }
-                    );
-
-                    let lang = "en";
-                    if (
-                      ConfigService.getReaderConfig("lang") &&
-                      ConfigService.getReaderConfig("lang").startsWith("zh")
-                    ) {
-                      lang = "zh";
-                    }
-                    setTimeout(() => {
-                      openExternalUrl(
-                        getWebsiteUrl() +
-                          "/" +
-                          lang +
-                          "/download" +
-                          "?version=developer"
-                      );
-                    }, 1000);
-                  }
+                onClick={() => {
+                  openExternalUrl(
+                    "https://github.com/NIyueeE/free-koodo-reader/releases"
+                  );
                 }}
               >
                 <Trans>Check for update</Trans>
@@ -211,7 +174,9 @@ class AboutSetting extends React.Component<SettingInfoProps, SettingInfoState> {
           <span
             className="change-location-button"
             onClick={() => {
-              copyTextToClipboard("feedback@koodoreader.com");
+              copyTextToClipboard(
+                "https://github.com/NIyueeE/free-koodo-reader/issues"
+              );
               toast.success(this.props.t("Email copied to clipboard"));
             }}
           >

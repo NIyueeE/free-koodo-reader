@@ -24,7 +24,6 @@ import {
   getPageWidth,
   getParserRegex,
   getPdfPassword,
-  getServerRegion,
   getTextRules,
   throttle,
 } from "../../utils/common";
@@ -33,7 +32,6 @@ import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import * as Kookit from "../../assets/lib/kookit.min";
 import PopupRefer from "../../components/popups/popupRefer";
 import DatabaseService from "../../utils/storage/databaseService";
-import { getOcrResult, getOcrResultV2 } from "../../utils/request/reader";
 import { BookHelper } from "../../assets/lib/kookit.min";
 import {
   parseWithExternalOcrApi,
@@ -311,22 +309,18 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
             getDefaultOcrEngine(this.props.currentBook),
             this.props.currentBook
           ),
-          externalWorker: {
-            recognize:
-              getDefaultOcrEngine(this.props.currentBook) === "system-ocr"
-                ? parseWithSystemOCR
-                : getDefaultOcrEngine(this.props.currentBook) ===
-                    "external-ocr-api"
-                  ? parseWithExternalOcrApi
-                  : ConfigService.getReaderConfig(ocrLangKey) === "accurate"
-                    ? getOcrResultV2
-                    : getOcrResult,
-          },
+          externalWorker:
+            getDefaultOcrEngine(this.props.currentBook) === "system-ocr" ||
+            getDefaultOcrEngine(this.props.currentBook) === "external-ocr-api"
+              ? {
+                  recognize:
+                    getDefaultOcrEngine(this.props.currentBook) === "system-ocr"
+                      ? parseWithSystemOCR
+                      : parseWithExternalOcrApi,
+                }
+              : undefined,
           ocrEngine: getDefaultOcrEngine(this.props.currentBook),
-          serverRegion:
-            getServerRegion() === "china" && this.props.isAuthed
-              ? "china"
-              : "global",
+          serverRegion: "global",
           paraSpacingValue:
             ConfigService.getReaderConfig("paraSpacingValue") || "1.5",
           titleSizeValue:

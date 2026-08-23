@@ -15,12 +15,7 @@ import packageJson from "../../package.json";
 import toast from "react-hot-toast";
 import i18n from "../i18n";
 import {
-  encryptToken,
-  refreshThirdToken,
-} from "./request/thirdparty";
-import {
   getCloudConfig,
-  getCloudToken,
   removeCloudConfig,
 } from "./file/common";
 import SyncService from "./storage/syncService";
@@ -897,25 +892,13 @@ export const getDefaultTransTarget = (langList) => {
   );
   return langMap[langTarget || "English"];
 };
-export const WEBSITE_URL = "https://koodoreader.com";
-export const CN_WEBSITE_URL = "https://koodoreader.cn";
+export const WEBSITE_URL = "https://github.com/NIyueeE/free-koodo-reader";
+export const CN_WEBSITE_URL = WEBSITE_URL;
 export const getServerRegion = () => {
-  let isUseCN = false;
-  if (ConfigService.getItem("serverRegion")) {
-    isUseCN = ConfigService.getItem("serverRegion") === "china";
-  } else {
-    if (navigator.language && navigator.language === "zh-CN") {
-      isUseCN = true;
-    }
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (timeZone && ["Asia/Shanghai", "Asia/Urumqi"].includes(timeZone)) {
-      isUseCN = true;
-    }
-  }
-  return isUseCN ? "china" : "global";
+  return "global";
 };
 export const getWebsiteUrl = () => {
-  return getServerRegion() === "china" ? CN_WEBSITE_URL : WEBSITE_URL;
+  return WEBSITE_URL;
 };
 export const formatTimestamp = (timestamp) => {
   if (!timestamp) return "";
@@ -1593,112 +1576,13 @@ export const findLastMatchIndex = (a: string[], b: string[]) => {
 
   return lastMatchIndex;
 };
-export const prepareThirdConfig = async (service: string, config: any) => {
-  if (
-    service === "adrive" ||
-    service === "boxnet" ||
-    service === "dropbox" ||
-    service === "dubox" ||
-    service === "google" ||
-    service === "microsoft" ||
-    service === "microsoft_exp" ||
-    service === "google_exp" ||
-    service === "yandex" ||
-    service === "yiyiwu"
-  ) {
-    if (
-      config.access_token &&
-      config.expires_at > new Date().getTime() + 15 * 60 * 1000
-    ) {
-      return config;
-    }
-
-    // Get access token
-    let refreshToken = config.refresh_token;
-    let res = await refreshThirdToken(service, refreshToken);
-    if (!res.data || !res.data.access_token) {
-      toast.error(
-        i18n.t(
-          "The authentication token for your data source is no longer valid, please reauthorize in the settings"
-        ),
-        {
-          id: "syncing",
-          duration: 6000,
-        }
-      );
-      let targetDrive = service;
-      await TokenService.setToken(targetDrive + "_token", "");
-      SyncService.removeSyncUtil(targetDrive);
-      removeCloudConfig(targetDrive);
-      if (isElectron) {
-        const ipcRenderer = window.electronAPI;
-        await ipcRenderer.invoke("cloud-close", {
-          service: targetDrive,
-        });
-      }
-      ConfigService.deleteListConfig(targetDrive, "dataSourceList");
-      if (targetDrive === ConfigService.getItem("defaultSyncOption")) {
-        ConfigService.removeItem("defaultSyncOption");
-      }
-      reloadManager();
-      return {};
-    }
-    if (
-      service === "adrive" ||
-      service === "boxnet" ||
-      service === "dubox" ||
-      service === "yiyiwu"
-    ) {
-      config.refresh_token = res.data.refresh_token;
-      config.access_token = res.data.access_token;
-      config.expires_at = new Date().getTime() + res.data.expires_in * 1000;
-    } else {
-      config.access_token = res.data.access_token;
-      config.expires_at = new Date().getTime() + res.data.expires_in * 1000;
-    }
-    await encryptToken(service, config);
-    SyncService.removeSyncUtil(service);
-    removeCloudConfig(service);
-    if (isElectron) {
-      const ipcRenderer = window.electronAPI;
-      await ipcRenderer.invoke("cloud-close", {
-        service: service,
-      });
-    }
-
-    return config;
-  } else {
-    return config;
-  }
+export const prepareThirdConfig = async (_service: string, config: any) => {
+  // free-koodo-reader: only local WebDAV / folder data sources remain.
+  return config;
 };
-export const isTokenExpired = async (service: string): Promise<boolean> => {
-  let config = await getCloudToken(service);
-  if (!config) {
-    return false;
-  }
-
-  if (
-    service === "adrive" ||
-    service === "boxnet" ||
-    service === "dropbox" ||
-    service === "dubox" ||
-    service === "google" ||
-    service === "microsoft" ||
-    service === "microsoft_exp" ||
-    service === "google_exp" ||
-    service === "yandex" ||
-    service === "yiyiwu"
-  ) {
-    if (
-      config.access_token &&
-      config.expires_at > new Date().getTime() + 15 * 60 * 1000
-    ) {
-      return false;
-    }
-    return true;
-  } else {
-    return false;
-  }
+export const isTokenExpired = async (_service: string): Promise<boolean> => {
+  // free-koodo-reader: no OAuth token refresh is needed.
+  return false;
 };
 export const langToName = (lang: string) => {
   let regionCode = lang.split("-")[1];

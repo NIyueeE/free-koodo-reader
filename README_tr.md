@@ -5,7 +5,7 @@
 </div>
 
 <div align="center" >
-  <img src="https://dl.koodoreader.com/screenshots/logo.png" width="96px" height="96px"/>
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/logo.png" width="96px" height="96px"/>
 </div>
 
 <h1 align="center">
@@ -17,7 +17,7 @@
 </h3>
 <div align="center">
 
-[İndir](https://koodoreader.com/en) | [Önizleme](https://web.koodoreader.com) | [Yol Haritası](https://koodoreader.com/en/roadmap) | [Belgeler](https://koodoreader.com/en/document) | [Eklentiler](https://koodoreader.com/en/plugin)
+[İndir](https://github.com/NIyueeE/free-koodo-reader/en) | [Önizleme](https://github.com/NIyueeE/free-koodo-reader) | [Yol Haritası](https://github.com/NIyueeE/free-koodo-reader/en/roadmap) | [Belgeler](https://github.com/NIyueeE/free-koodo-reader/en/document) | [Eklentiler](https://github.com/NIyueeE/free-koodo-reader/en/plugin)
 
 </div>
 
@@ -26,10 +26,10 @@
 <div align="center">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/7.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/7.png" width="800px">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/8.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/8.png" width="800px">
   <br/>
   <br/>
 </div>
@@ -73,15 +73,15 @@
 
 ## Kurulum
 
-### Masaüstü sürümü: [İndir](https://koodoreader.com/en/download)
+### Masaüstü sürümü: [İndir](https://github.com/NIyueeE/free-koodo-reader/en/download)
 
-### Web sürümü：[Ziyaret et](https://web.koodoreader.com)
+### Web sürümü：[Ziyaret et](https://github.com/NIyueeE/free-koodo-reader)
 
-### Android sürümü：[İndir](https://koodoreader.com/en/download)
+### Android sürümü：[İndir](https://github.com/NIyueeE/free-koodo-reader/en/download)
 
-### iOS sürümü：[İndir](https://koodoreader.com/en/download)
+### iOS sürümü：[İndir](https://github.com/NIyueeE/free-koodo-reader/en/download)
 
-### Tarayıcı uzantısı：[İndir](https://www.koodoreader.com/en/use-extension)
+### Tarayıcı uzantısı：[İndir](https://github.com/NIyueeE/free-koodo-reader/en/use-extension)
 
 ### Scoop ile kurulum:
 
@@ -116,7 +116,7 @@ brew install --cask koodo-reader
 
 ### Docker ile kurulum:
 
-[Kurulum Kılavuzu](https://koodoreader.com/en/deploy-docker)
+[Kurulum Kılavuzu](https://github.com/NIyueeE/free-koodo-reader/en/deploy-docker)
 
 ## Ekran Görüntüleri
 
@@ -124,37 +124,37 @@ brew install --cask koodo-reader
   <b>Kitap listesi</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/1.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/1.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Kitap görünümü</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/5.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/5.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Liste modu</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/2.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/2.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Kapak modu</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/3.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/3.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Okuyucu menüsü</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/6.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/6.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Karanlık mod</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/4.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/4.png" width="800px"></kbd>
   <br/>
 </div>
 

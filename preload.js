@@ -1,7 +1,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 const INVOKE_CHANNELS = new Set([
-  "cancel-download-app", "discord-rpc-update", "discord-rpc-clear", "update-win-app",
+  "discord-rpc-update", "discord-rpc-clear",
   "open-book", "generate-tts", "get-tts-voices", "cloud-upload", "cloud-download", "cloud-progress",
   "picker-download", "picker-progress", "cloud-reset", "cloud-stats", "cloud-delete",
   "cloud-list", "picker-list", "cloud-exist", "cloud-close", "clear-tts", "select-path",
@@ -11,13 +11,12 @@ const INVOKE_CHANNELS = new Set([
   "reset-reader-position", "reset-main-position", "select-zip-file", "select-book",
   "custom-database-command", "database-command", "close-database", "set-always-on-top",
   "set-auto-maximize", "toggle-auto-launch", "toggle-minimize-to-tray", "open-explorer-folder",
-  "get-debug-logs", "hide-reader", "open-console", "reload-reader", "reload-main", "new-chat",
+  "get-debug-logs", "hide-reader", "open-console", "reload-reader", "reload-main",
   "clear-all-data", "new-tab", "reload-tab", "adjust-tab-size", "exit-tab",
   "enter-tab-fullscreen", "exit-tab-fullscreen", "enter-fullscreen", "exit-fullscreen",
   "open-url", "switch-moyu", "set-native-theme-source", "system-ocr", "file-command",
   "open-external", "dict-lookup", "partial-md5", "get-cover-url",
-  "crypto-file-md5", "backup-path",
-  "ai-request", "ai-chat-stream"
+  "crypto-file-md5", "backup-path"
 ]);
 const SEND_CHANNELS = new Set(["reader-close-ready", "tab-close-ready"]);
 const SEND_SYNC_CHANNELS = new Set([
@@ -25,10 +24,9 @@ const SEND_SYNC_CHANNELS = new Set([
   "get-file-data", "check-file-data", "user-data", "file-command-sync", "clipboard-read-text-sync"
 ]);
 const EVENT_CHANNELS = new Set([
-  "oauth-callback", "before-reader-close", "before-tab-close", "reading-finished",
-  "chat-message", "import-url-from-link", "open-book-from-link", "open-note-from-link",
-  "picker-finished", "download-app-progress", "backup-progress",
-  "ai-chat-chunk", "ai-chat-done", "ai-chat-error"
+  "before-reader-close", "before-tab-close", "reading-finished",
+  "import-url-from-link", "open-book-from-link", "open-note-from-link",
+  "backup-progress"
 ]);
 
 const assertChannel = (set, channel) => {

@@ -5,7 +5,7 @@
 </div>
 
 <div align="center" >
-  <img src="https://dl.koodoreader.com/screenshots/logo.png" width="96px" height="96px"/>
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/logo.png" width="96px" height="96px"/>
 </div>
 
 <h1 align="center">
@@ -17,7 +17,7 @@
 </h3>
 <div align="center">
 
-[Baixar](https://koodoreader.com/en) | [Pré-visualizar](https://web.koodoreader.com) | [Roadmap](https://koodoreader.com/en/roadmap) | [Documento](https://koodoreader.com/en/document)
+[Baixar](https://github.com/NIyueeE/free-koodo-reader/en) | [Pré-visualizar](https://github.com/NIyueeE/free-koodo-reader) | [Roadmap](https://github.com/NIyueeE/free-koodo-reader/en/roadmap) | [Documento](https://github.com/NIyueeE/free-koodo-reader/en/document)
 
 </div>
 
@@ -26,10 +26,10 @@
 <div align="center">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/7.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/7.png" width="800px">
   <br/>
   <br/>
-  <img src="https://dl.koodoreader.com/screenshots/8.png" width="800px">
+  <img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/8.png" width="800px">
   <br/>
   <br/>
 </div>
@@ -58,9 +58,9 @@
 ## Instalação
 
 - Versão para computador:
-  - Versão estável (Recomendada): [Baixar](https://koodoreader.com/en)
+  - Versão estável (Recomendada): [Baixar](https://github.com/NIyueeE/free-koodo-reader/en)
   - Versão do desenvolvedor: [Baixar](https://github.com/koodo-reader/koodo-reader/releases/latest) (Com novos recursos e correção de bugs, mas podendo ainda conter alguns problemas desconhecidos)
-- Versão para Web：[Pré-visualizar](https://web.koodoreader.com)
+- Versão para Web：[Pré-visualizar](https://github.com/NIyueeE/free-koodo-reader)
 - Instalar com o Scoop:
 
 ```shell
@@ -94,7 +94,7 @@ brew install --cask koodo-reader
 
 - Instalar com o Docker:
 
-[Installation Guide](https://koodoreader.com/en/deploy-docker)
+[Installation Guide](https://github.com/NIyueeE/free-koodo-reader/en/deploy-docker)
 
 ## Capturas de tela
 
@@ -102,37 +102,37 @@ brew install --cask koodo-reader
   <b>Lista de livros</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/1.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/1.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>exposição de livro</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/5.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/5.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Modo em lista</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/2.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/2.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Modo de capa</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/3.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/3.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Opções de leitura</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/6.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/6.png" width="800px"></kbd>
   <br/>
   <br/>
   <b>Modo escuro e cores do tema</b>
   <br/>
   <br/>
-  <kbd><img src="https://dl.koodoreader.com/screenshots/4.png" width="800px"></kbd>
+  <kbd><img src="https://github.com/NIyueeE/free-koodo-reader/screenshots/4.png" width="800px"></kbd>
   <br/>
   <br/>
 </div>

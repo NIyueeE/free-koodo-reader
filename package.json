@@ -5,7 +5,7 @@
   "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
     "name": "App by Troye",
-    "email": "feedback@koodoreader.com"
+    "email": "NIyueeE@users.noreply.github.com"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -129,8 +129,7 @@
       "src/assets/lib/kookit-extra.min.mjs",
       "src/utils/plugins/main/**/*.js",
       "main.js",
-      "preload.js",
-      "chat-preload.js"
+      "preload.js"
     ],
     "protocols": {
       "name": "KoodoReader",
