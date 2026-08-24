@@ -12,12 +12,10 @@ import { generateSnapshot } from "../../utils/file/backup";
 import { isElectron } from "react-device-detect";
 import {
   getCloudConfig,
-  removeCloudConfig,
   upgradeConfig,
   upgradeStorage,
 } from "../../utils/file/common";
 import toast from "react-hot-toast";
-import { Trans } from "react-i18next";
 import { SyncHelper } from "../../assets/lib/kookit-extra-browser.min";
 import ConfigUtil from "../../utils/file/configUtil";
 import DatabaseService from "../../utils/storage/databaseService";
@@ -28,7 +26,6 @@ import {
   checkMissingBook,
   generateSyncRecord,
   getBookPartialMd5,
-  getChatLocale,
   getTaskStats,
   scanFolderForNewBooks,
   showTaskProgress,
@@ -37,9 +34,7 @@ import {
 } from "../../utils/common";
 import { driveList } from "../../constants/driveList";
 // free-koodo-reader: SupportDialog (Pro/purchase) removed.
-import SyncService from "../../utils/storage/syncService";
 import { LocalFileManager } from "../../utils/file/localFile";
-import i18n from "../../i18n";
 import TokenService from "../../utils/storage/tokenService";
 declare var window: any;
 
@@ -136,11 +131,6 @@ class Header extends React.Component<HeaderProps, HeaderState> {
           "recordLocation"
         );
         BookUtil.redirectBook(book);
-      });
-      ipcRenderer.on("chat-message", async (msg: any) => {
-        if (msg.payload.event === "new-message") {
-          ConfigService.setReaderConfig("isAllowNotification", "yes");
-        }
       });
     } else {
       await upgradeConfig();

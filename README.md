@@ -62,9 +62,24 @@ yarn android:build:release # Build a release APK
 
 The repository uses GitHub Actions:
 
-- `ci.yml` — typecheck, web production build, and Android debug APK on every push/PR to `main`.
-- `release.yml` — desktop (Windows/Linux) and Android release builds on workflow dispatch or version tags (`v*`).
-- `docker-publish.yml` — Docker image publishing.
+- `ci.yml` — on every push/PR to `main`:
+  - TypeScript type check
+  - ESLint (zero warnings allowed)
+  - Unit tests (i18n integrity, platform detection)
+  - Production renderer build (`build/` is git-ignored, so the bundle is always built - a missing renderer is what caused the historic white-screen bug)
+  - Package identifier alignment check (Desktop `appId` == Capacitor `appId` == Android `applicationId`)
+  - Android debug APK build + renderer-presence check
+  - **GUI smoke test**: launches the real Electron app under Xvfb and verifies the renderer mounts (no white screen); a screenshot is uploaded as an artifact
+- `release.yml` — desktop (Windows/Linux) and Android releases on workflow dispatch or version tags (`v*`):
+  - Always builds the renderer before `electron-builder` and refuses to package when `build/index.html` is missing
+  - Android release APK is signed with the dedicated `android/app/keystore/free-koodo-reader.jks` keystore (credentials in `android/app/keystore.properties`, overridable via CI secrets `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD`)
+- `docker-publish.yml` — Docker image publishing (self-hosted web deployment, manual trigger).
+
+## Android
+
+- Package name: `xyz.freekoodo.reader` (aligned with the desktop `appId`).
+- The manager UI auto-collapses the sidebar into an icon strip on narrow screens (≤ 768 px) and includes responsive header/dialog layout, so phones and tablets stay usable.
+- Serial number / signature: release APKs are signed with `free-koodo-reader.jks` (store password and key password in `keystore.properties`).
 
 ## Repository
 

@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  typecheck-build:
+  typecheck-lint-build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -20,13 +20,57 @@ jobs:
           cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --silent
 
       - name: TypeScript type check
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
 
+      - name: ESLint (zero warnings allowed)
+        run: yarn lint --max-warnings 0
+
+      - name: Unit tests
+        run: CI=true yarn test --watchAll=false --passWithNoTests
+
       - name: Build production bundle
         run: yarn build
+
+      - name: Verify renderer bundle exists (prevents white-screen releases)
+        shell: bash
+        run: |
+          if [ ! -f build/index.html ]; then
+            echo "::error::build/index.html is missing - the packaged app would show a white screen"
+            exit 1
+          fi
+
+      - name: Check package identifiers are aligned across platforms
+        shell: bash
+        run: |
+          node - <<'EOF'
+          const fs = require("fs");
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const cap = fs.existsSync("capacitor.config.ts")
+            ? fs.readFileSync("capacitor.config.ts", "utf8")
+            : "";
+          const appId = pkg.build && pkg.build.appId;
+          const match = cap.match(/appId:\s*['"]([^'"]+)['"]/);
+          const capAppId = match ? match[1] : null;
+          const gradle = fs.readFileSync("android/app/build.gradle", "utf8");
+          const nsMatch = gradle.match(/namespace\s*=\s*"([^"]+)"/);
+          const appIdMatch = gradle.match(/applicationId\s+"([^"]+)"/);
+          const ids = [appId, capAppId, nsMatch && nsMatch[1], appIdMatch && appIdMatch[1]];
+          console.log("appIds:", JSON.stringify(ids));
+          for (const id of ids) {
+            if (!id) {
+              console.error("::error::package identifier is missing");
+              process.exit(1);
+            }
+            if (id !== appId) {
+              console.error("::error::package identifiers are not aligned: found " + id + ", expected " + appId);
+              process.exit(1);
+            }
+          }
+          console.log("Package identifiers aligned:", appId);
+          EOF
 
       - name: Upload web build artifact
         uses: actions/upload-artifact@v7
@@ -36,7 +80,7 @@ jobs:
           if-no-files-found: error
 
   android-build:
-    needs: typecheck-build
+    needs: typecheck-lint-build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,7 +99,7 @@ jobs:
           java-version: "21"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --silent
 
       - name: Download web build artifact
         uses: actions/download-artifact@v8
@@ -70,9 +114,58 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
+      - name: Verify APK contains the web renderer
+        shell: bash
+        run: |
+          APK=$(ls android/app/build/outputs/apk/debug/*.apk | head -n 1)
+          echo "APK: $APK"
+          if ! unzip -l "$APK" | grep -q "assets/public/index.html"; then
+            echo "::error::APK does not contain assets/public/index.html (white-screen risk)"
+            exit 1
+          fi
+          echo "APK renderer bundle check passed"
+
       - name: Upload Android debug APK artifact
         uses: actions/upload-artifact@v7
         with:
           name: android-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+  # GUI smoke test: launch the real Electron app under a virtual display and
+  # verify the renderer actually mounts (catches white-screen regressions).
+  smoke-test:
+    needs: typecheck-lint-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --silent
+
+      - name: Download web build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: web-build
+          path: build
+
+      - name: Install Xvfb
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+
+      - name: Run GUI smoke test (Electron under Xvfb)
+        run: xvfb-run -a --server-args="-screen 0 1366x768x24" node scripts/smoke-test.js
+
+      - name: Upload smoke test screenshot
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-screenshot
+          path: build/smoke-screenshot.png
+          if-no-files-found: ignore

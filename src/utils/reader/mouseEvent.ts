@@ -5,7 +5,6 @@ import {
   handleExitFullScreen,
   handleFullScreen,
   sleep,
-  throttle,
 } from "../common";
 import Hammer from "hammerjs";
 import TTSUtil from "./ttsUtil";

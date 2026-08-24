@@ -116,6 +116,7 @@ export function useBookItem(props: BookItemSharedProps) {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book.key, refreshBookKey]); // intentionally omitting other deps to replicate componentWillReceiveProps behaviour
 
   const handleShiftSelect = useCallback(() => {

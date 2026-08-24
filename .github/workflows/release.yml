@@ -27,12 +27,27 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 22
+          cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --frozen-lockfile --silent
 
       - name: TypeScript type check
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
+
+      # Critical: the renderer bundle is not committed (build/ is git-ignored).
+      # Packaging without it produces an app with a blank/white screen.
+      - name: Build production bundle (renderer)
+        run: yarn build
+
+      - name: Verify renderer bundle exists (prevents white-screen releases)
+        shell: bash
+        run: |
+          if [ ! -f build/index.html ]; then
+            echo "::error::build/index.html is missing - the packaged app would show a white screen. Run yarn build before packaging."
+            exit 1
+          fi
+          echo "Renderer bundle present: $(du -sh build | cut -f1)"
 
       - name: Install Snapcraft
         uses: samuelmeuli/action-snapcraft@v3
@@ -116,7 +131,7 @@ jobs:
           java-version: "21"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --silent
 
       - name: Build production bundle
         run: yarn build
@@ -124,9 +139,23 @@ jobs:
       - name: Sync Capacitor Android project
         run: npx cap sync android
 
-      - name: Build Android release APK
+      - name: Build Android release APK (signed with release keystore)
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
+
+      - name: Verify APK signing and renderer presence
+        shell: bash
+        run: |
+          APK=$(ls android/app/build/outputs/apk/release/*.apk | head -n 1)
+          echo "APK: $APK"
+          if ! unzip -l "$APK" | grep -q "assets/public/index.html"; then
+            echo "::error::APK does not contain assets/public/index.html (white-screen risk)"
+            exit 1
+          fi
+          if ! unzip -l "$APK" | grep -qv "META-INF/.*\.RSA"; then
+            echo "::warning::APK appears unsigned"
+          fi
+          echo "APK checks passed"
 
       - name: Upload Android APK artifact
         uses: actions/upload-artifact@v7

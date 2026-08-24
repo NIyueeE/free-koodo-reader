@@ -7,6 +7,7 @@ import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import { getWebsiteUrl, openInBrowser } from "../../utils/common";
 import { Trans } from "react-i18next";
 import toast from "react-hot-toast";
+import { isNarrowScreen } from "../../platform";
 import {
   addBooksToFavorite,
   addBooksToShelf,
@@ -26,7 +27,8 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
       isOpenDelete: false,
       shelfTitle: "",
       isCollapsed:
-        ConfigService.getReaderConfig("isCollapsed") === "yes" || false,
+        ConfigService.getReaderConfig("isCollapsed") === "yes" ||
+        isNarrowScreen(),
       isCreateShelf: false,
       newShelfName: "",
       dropTargetShelf: "",
@@ -39,10 +41,19 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
         : document.URL.split("/").reverse()[0]
     );
     document.addEventListener("dragend", this.handleDocumentDragEnd);
+    // Narrow screens (Android phones / small desktop windows) keep the
+    // sidebar collapsed so the content area stays usable.
+    window.addEventListener("resize", this.handleNarrowResize);
   }
   componentWillUnmount() {
     document.removeEventListener("dragend", this.handleDocumentDragEnd);
+    window.removeEventListener("resize", this.handleNarrowResize);
   }
+  handleNarrowResize = () => {
+    if (isNarrowScreen() && !this.state.isCollapsed) {
+      this.handleCollapse(true);
+    }
+  };
   handleDocumentDragEnd = () => {
     this.setState({ dropTargetShelf: "" });
   };
@@ -76,6 +87,9 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
     this.setState({ hoverShelfTitle });
   };
   handleCollapse = (isCollapsed: boolean) => {
+    // On narrow screens (phones) the sidebar stays collapsed so the content
+    // area keeps a usable width; expanding is only allowed on desktop.
+    if (!isCollapsed && isNarrowScreen()) return;
     this.setState({ isCollapsed });
     this.props.handleCollapse(isCollapsed);
     ConfigService.setReaderConfig("isCollapsed", isCollapsed ? "yes" : "no");
@@ -493,7 +507,7 @@ class Sidebar extends React.Component<SidebarProps, SidebarState> {
                   onChange={(event) => {
                     // Remove special characters from the shelf name
                     const sanitizedValue = event.target.value.replace(
-                      /[\[\]{}",:\/\\|<>*?]/g,
+                      /[[\]{}",:/\\|<>*?]/g,
                       ""
                     );
                     this.setState({ newShelfName: sanitizedValue });

@@ -1,7 +1,6 @@
 import React from "react";
 import { SettingInfoProps, SettingInfoState } from "./interface";
 import { Trans } from "react-i18next";
-import _ from "underscore";
 
 import toast from "react-hot-toast";
 import {

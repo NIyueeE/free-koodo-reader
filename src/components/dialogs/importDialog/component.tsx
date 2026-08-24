@@ -3,7 +3,6 @@ import "./importDialog.css";
 import { driveList } from "../../../constants/driveList";
 import { Trans } from "react-i18next";
 import { ImportDialogProps, ImportDialogState } from "./interface";
-import _ from "underscore";
 import toast from "react-hot-toast";
 import { isElectron } from "react-device-detect";
 import { getCloudConfig } from "../../../utils/file/common";

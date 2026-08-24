@@ -647,7 +647,7 @@ if (process.argv.length >= 2) {
   filePath = process.argv[1];
   // Check argv for a deep link URL (cold start)
   for (const arg of process.argv) {
-    if (arg.startsWith("koodo-reader://")) {
+    if (arg.startsWith("free-koodo-reader://")) {
       pendingDeepLink = arg;
       break;
     }
@@ -696,7 +696,7 @@ if (!singleInstance) {
       mainWin.focus();
     }
     // Handle deep link passed via second-instance argv
-    const deepLink = argv.find((arg) => arg.startsWith("koodo-reader://"));
+    const deepLink = argv.find((arg) => arg.startsWith("free-koodo-reader://"));
     if (deepLink) {
       handleCallback(deepLink);
     }
@@ -2741,12 +2741,111 @@ const spoofOriginForLocalDev = () => {
   );
 };
 
+// Smoke test mode: used by CI (scripts/smoke-test.js) to verify that the
+// packaged renderer actually mounts. Exits 0 and prints KOODO_SMOKE_RESULT:
+// PASS on success, or exits 1 with KOODO_SMOKE_RESULT: FAIL - <reason>.
+const runSmokeTest = () => {
+  if (!mainWin || mainWin.isDestroyed()) {
+    console.log("KOODO_SMOKE_RESULT: FAIL - main window was not created");
+    app.exit(1);
+    return;
+  }
+  const wc = mainWin.webContents;
+  let settled = false;
+  const captureScreenshot = async () => {
+    try {
+      if (process.env.KOODO_SMOKE_SCREENSHOT) {
+        const image = await wc.capturePage();
+        fs.writeFileSync(process.env.KOODO_SMOKE_SCREENSHOT, image.toPNG());
+      }
+    } catch (error) {
+      console.warn("KOODO_SMOKE: failed to capture screenshot", error);
+    }
+  };
+  const fail = async (reason) => {
+    if (settled) return;
+    settled = true;
+    await captureScreenshot();
+    console.log("KOODO_SMOKE_RESULT: FAIL - " + reason);
+    app.exit(1);
+  };
+  const pass = async () => {
+    if (settled) return;
+    settled = true;
+    await captureScreenshot();
+    console.log("KOODO_SMOKE_RESULT: PASS");
+    app.exit(0);
+  };
+  const timeout = setTimeout(() => {
+    fail("timeout waiting for the renderer to mount");
+  }, 90000);
+  wc.on("did-fail-load", (event, errorCode, errorDescription) => {
+    fail(
+      "did-fail-load " + errorCode + " " + errorDescription + " " + wc.getURL()
+    );
+  });
+  wc.on("render-process-gone", (event, details) => {
+    fail("render-process-gone " + JSON.stringify(details));
+  });
+  wc.on("did-finish-load", () => {
+    // Give React a moment to mount and run the first render pass.
+    setTimeout(async () => {
+      try {
+        const result = await wc.executeJavaScript(
+          `(() => {
+            const root = document.getElementById("root");
+            const bodyText = document.body && document.body.innerText || "";
+            const rect = (selector) => {
+              const el = document.querySelector(selector);
+              if (!el) return null;
+              const r = el.getBoundingClientRect();
+              return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
+            };
+            return {
+              rootChildren: root ? root.children.length : -1,
+              bodyTextLength: bodyText.length,
+              managerMounted: !!document.querySelector(".manager"),
+              hasElectronAPI: typeof window.electronAPI !== "undefined",
+              title: document.title,
+              layout: {
+                viewport: { w: window.innerWidth, h: window.innerHeight },
+                search: rect(".header-search-container"),
+                settings: rect(".setting-icon-parrent"),
+                empty: rect(".empty-page-container"),
+                bookList: rect(".book-list-container-parent")
+              }
+            };
+          })()`
+        );
+        clearTimeout(timeout);
+        console.log("KOODO_SMOKE_DETAIL: " + JSON.stringify(result));
+        if (result && result.rootChildren >= 1 && result.managerMounted && result.bodyTextLength > 30) {
+          await pass();
+        } else {
+          fail(
+            "renderer did not mount (root children: " +
+              (result ? result.rootChildren : "n/a") +
+              ", body text length: " +
+              (result ? result.bodyTextLength : "n/a") +
+              ")"
+          );
+        }
+      } catch (error) {
+        fail("executeJavaScript failed: " + String(error));
+      }
+    }, 4000);
+  });
+};
+
 app.on("ready", async () => {
   registerAssetProtocol();
   applyCorsToRendererRequests();
   spoofOriginForLocalDev();
   await applyProxyToSession();
   createMainWin();
+  if (process.env.KOODO_SMOKE_TEST === "1") {
+    runSmokeTest();
+  }
 });
 app.on("before-quit", () => {
   isQuitting = true;
@@ -2759,7 +2858,7 @@ app.on("open-file", (e, pathToFile) => {
   filePath = pathToFile;
 });
 // Register protocol handler
-app.setAsDefaultProtocolClient("koodo-reader");
+app.setAsDefaultProtocolClient("free-koodo-reader");
 const serializeArg = (arg) => {
   if (arg === null) return "null";
   if (arg === undefined) return "undefined";
@@ -2795,7 +2894,7 @@ console.info = function (...args) {
 const handleCallback = (url) => {
   try {
     // 检查 URL 是否有效
-    if (!url.startsWith("koodo-reader://")) {
+    if (!url.startsWith("free-koodo-reader://")) {
       console.error("Invalid URL format:", url);
       return;
     }

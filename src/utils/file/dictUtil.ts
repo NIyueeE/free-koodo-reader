@@ -1,8 +1,6 @@
 import { isElectron } from "react-device-detect";
 import { getStorageLocation } from "../common";
 import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
-import { LocalFileManager } from "./localFile";
-import localforage from "localforage";
 import { Buffer } from "buffer";
 import toast from "react-hot-toast";
 import i18n from "../../i18n";

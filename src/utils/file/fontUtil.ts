@@ -4,7 +4,6 @@ import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
 import { LocalFileManager } from "./localFile";
 import localforage from "localforage";
 import { Buffer } from "buffer";
-import i18n from "../../i18n";
 
 declare var window: any;
 

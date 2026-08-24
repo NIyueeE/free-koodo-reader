@@ -34,6 +34,7 @@ export const executeCustomTranslation = (
   plugin: CustomRendererPluginRecord
 ): TranslatePlugin => {
   window.translate = undefined;
+  // eslint-disable-next-line no-eval
   eval(plugin.script);
   if (typeof window.translate !== "function") {
     throw new Error("Invalid custom translation plugin");
@@ -45,6 +46,7 @@ export const executeCustomDictionary = (
   plugin: CustomRendererPluginRecord
 ): DictionaryPlugin => {
   window.getDictText = undefined;
+  // eslint-disable-next-line no-eval
   eval(plugin.script);
   if (typeof window.getDictText !== "function") {
     throw new Error("Invalid custom dictionary plugin");

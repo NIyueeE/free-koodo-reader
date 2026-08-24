@@ -18,7 +18,8 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 ## 默认分支
 
 - 默认分支：`main`
-- 开发流程：在 `main` 上直接修改并推送，CI 会自动运行类型检查、Web 构建和 Android debug APK 构建。
+- 开发流程：在 `main` 上直接修改并推送，CI 会自动运行类型检查、ESLint（零警告）、单元测试、生产构建、GUI 冒烟测试（Xvfb 下启动真实 Electron 验证渲染器挂载）和 Android debug APK 构建。
+- **注意**：`build/`（渲染器产物）被 git 忽略，任何打包（`yarn release`、release workflow）都必须先执行 `yarn build`，否则会发布白屏版本。CI 与 release workflow 已内置缺失检查与冒烟测试。
 
 ## 关键约束
 

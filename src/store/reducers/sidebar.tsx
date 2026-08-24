@@ -1,8 +1,10 @@
 import { ConfigService } from "../../assets/lib/kookit-extra-browser.min";
+import { isNarrowScreen } from "../../platform";
 const initState = {
   mode: "home",
   shelfTitle: "",
-  isCollapsed: ConfigService.getReaderConfig("isCollapsed") === "yes",
+  isCollapsed:
+    ConfigService.getReaderConfig("isCollapsed") === "yes" || isNarrowScreen(),
 };
 export function sidebar(
   state = initState,

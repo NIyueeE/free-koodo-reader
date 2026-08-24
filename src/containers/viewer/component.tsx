@@ -33,6 +33,7 @@ import * as Kookit from "../../assets/lib/kookit.min";
 import PopupRefer from "../../components/popups/popupRefer";
 import DatabaseService from "../../utils/storage/databaseService";
 import { BookHelper } from "../../assets/lib/kookit.min";
+import { isMobileDevice } from "../../platform";
 import {
   parseWithExternalOcrApi,
   parseWithSystemOCR,
@@ -259,10 +260,6 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
           pdfCrop = { top, bottom, left, right };
         }
       }
-      const ocrLangKey =
-        this.props.currentBook.description.indexOf("scanned") > -1
-          ? "scannedOcrLang"
-          : "textOcrLang";
       let rendition = BookHelper.getRendition(
         result,
         {
@@ -291,7 +288,7 @@ class Viewer extends React.Component<ViewerProps, ViewerState> {
               ? "yes"
               : "no",
           backgroundColor: ConfigService.getReaderConfig("backgroundColor"),
-          isMobile: "no",
+          isMobile: isMobileDevice() ? "yes" : "no",
           isIndent: ConfigService.getReaderConfig("isIndent"),
           isHyphenation: ConfigService.getReaderConfig("isHyphenation"),
           isStartFromEven: ConfigService.getReaderConfig("isStartFromEven"),

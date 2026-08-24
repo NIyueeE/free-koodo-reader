@@ -11,7 +11,6 @@ import {
   paraSpacingList,
   titleSizeList,
 } from "../../../constants/dropdownList";
-import toast from "react-hot-toast";
 import { getDefaultOcrEngine, getOcrLangList } from "../../../utils/common";
 
 class ConvertDialog extends React.Component<

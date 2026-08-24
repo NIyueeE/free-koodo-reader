@@ -2,7 +2,6 @@ import React from "react";
 import "./sortShelfDialog.css";
 import { Trans } from "react-i18next";
 import { SortShelfDialogProps, SortShelfDialogState } from "./interface";
-import _ from "underscore";
 import { ReactSortable } from "react-sortablejs";
 import { ConfigService } from "../../../assets/lib/kookit-extra-browser.min";
 import toast from "react-hot-toast";
@@ -127,7 +126,6 @@ class SortShelfDialog extends React.Component<
                 this.setState({ sortedShelfList: newState })
               }
               animation={200}
-              delayOnTouchStart={true}
               delay={2}
               scroll={true} // Enable auto-scrolling
               scrollSensitivity={140} // Distance from edge that triggers scrolling (px)
@@ -158,7 +156,7 @@ class SortShelfDialog extends React.Component<
                       defaultValue={item.name}
                       onChange={(event) => {
                         const sanitizedValue = event.target.value.replace(
-                          /[\[\]{}",:\/\\|<>*?]/g,
+                          /[[\]{}",:/\\|<>*?]/g,
                           ""
                         );
                         this.setState({ newShelfName: sanitizedValue });

@@ -64,7 +64,7 @@ export const translate: TranslatePlugin = async (
     return (
       date
         .toISOString()
-        .replace(/[:\-]|\.\d{3}/g, "")
+        .replace(/[:-]|\.\d{3}/g, "")
         .slice(0, 15) + "Z"
     );
   }

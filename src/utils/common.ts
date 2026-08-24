@@ -11,13 +11,9 @@ import Book from "../models/Book";
 import BookUtil from "./file/bookUtil";
 import * as Kookit from "../assets/lib/kookit.min";
 import DatabaseService from "./storage/databaseService";
-import packageJson from "../../package.json";
 import toast from "react-hot-toast";
 import i18n from "../i18n";
-import {
-  getCloudConfig,
-  removeCloudConfig,
-} from "./file/common";
+import { getCloudConfig } from "./file/common";
 import SyncService from "./storage/syncService";
 import localforage from "localforage";
 import { driveList } from "../constants/driveList";
@@ -27,7 +23,7 @@ import {
   getOcrPaddleLangList,
   ocrTesseractLangList,
 } from "../constants/dropdownList";
-import TokenService from "./storage/tokenService";
+import { isMobileDevice } from "../platform";
 declare var window: any;
 export const supportedFormats = [
   ".epub",
@@ -724,7 +720,7 @@ export const preCacheAllBooks = async (bookList: Book[]) => {
         textOrientation: ConfigService.getReaderConfig("textOrientation"),
         parserRegex: "",
         isDarkMode: "no",
-        isMobile: "no",
+        isMobile: isMobileDevice() ? "yes" : "no",
         password: getPdfPassword(selectedBook),
         isScannedPDF:
           selectedBook.description.indexOf("scanned") > -1 ? "yes" : "no",
@@ -1562,12 +1558,10 @@ export const findLastMatchIndex = (a: string[], b: string[]) => {
 
   for (let i = 0; i < b.length; i++) {
     // 从当前 aIndex 开始在 a 中查找 b[i]
-    let found = false;
     for (let j = aIndex; j < a.length; j++) {
       if (a[j].trim() === b[i].trim()) {
         lastMatchIndex = j;
         aIndex = j + 1;
-        found = true;
         break;
       }
     }

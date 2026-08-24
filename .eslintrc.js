@@ -1,7 +1,15 @@
 module.exports = {
-  // 其他配置
+  extends: "react-app",
   rules: {
     "no-unused-expressions": "off",
     "@typescript-eslint/ban-types": "off",
   },
+  ignorePatterns: [
+    "src/assets/lib/**",
+    "src/utils/plugins/main/**",
+    "build/**",
+    "dist/**",
+    "android/**",
+    "node_modules/**",
+  ],
 };

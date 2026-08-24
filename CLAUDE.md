@@ -75,6 +75,12 @@ yarn build
 # 运行测试
 yarn test
 
+# ESLint（CI 要求零警告）
+yarn lint
+
+# GUI 冒烟测试（需 Xvfb，等价于 CI 的 smoke-test job）
+node scripts/smoke-test.js
+
 # 打包分发
 yarn release
 

@@ -593,6 +593,7 @@
   "Download successful": "Download successful",
   "Download failed": "Download failed",
   "Downloading": "Downloading",
+  "Waiting for download...": "Waiting for download...",
   "Back": "Back",
   "Please select a backup path": "Please select a backup path",
   "Only desktop version supports TTS plugin": "Only desktop version supports TTS plugin",

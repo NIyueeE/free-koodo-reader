@@ -7,7 +7,6 @@ import {
   MetadataResult,
   BookResultItem,
 } from "./interface";
-import toast from "react-hot-toast";
 
 class MetadataDialog extends React.Component<
   MetadataDialogProps,

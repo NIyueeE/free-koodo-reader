@@ -63,7 +63,7 @@ export const translate: TranslatePlugin = async (text, from, to, axios, config) 
 
   const signedHeaders = "content-type;host";
   const canonicalHeaders =
-    `content-type:application/json; charset=utf-8\n` + `host:${host}\n`;
+    `content-type:application/json; charset=utf-8\nhost:${host}\n`;
   const canonicalRequest = [
     "POST",
     "/",

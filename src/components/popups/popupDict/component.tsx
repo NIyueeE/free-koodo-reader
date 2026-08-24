@@ -49,9 +49,6 @@ class PopupDict extends React.Component<PopupDictProps, PopupDictState> {
     this.setState({ word: originalText });
     // let prototype = "";
     this.setState({ prototype: originalText });
-    if (ConfigService.getReaderConfig("isLemmatizeWord") === "yes") {
-      originalText = originalText;
-    }
     if (!this.state.dictService) {
       let pluginList = this.props.plugins.filter(
         (item) =>

@@ -103,13 +103,6 @@ class UpdateInfo extends React.Component<UpdateInfoProps, UpdateInfoState> {
                 <div
                   className="new-version-skip"
                   onClick={() => {
-                    let lang = "en";
-                    if (
-                      ConfigService.getReaderConfig("lang") &&
-                      ConfigService.getReaderConfig("lang").startsWith("zh")
-                    ) {
-                      lang = "zh";
-                    }
                     openExternalUrl(
                       "https://github.com/NIyueeE/free-koodo-reader/releases"
                     );

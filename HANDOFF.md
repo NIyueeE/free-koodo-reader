@@ -6,24 +6,32 @@ This document records the current state of the project, the decisions already ma
 
 - Repository: https://github.com/NIyueeE/free-koodo-reader
 - Default branch: `main`
-- Latest release: `v3.0.0`
-- CI: typecheck + production build + Android debug APK on every push/PR to `main`
-- Release workflow: Windows + Linux desktop builds + Android APK, published to GitHub Releases
+- Latest release: `v3.0.1`
+- CI on every push/PR to `main`: typecheck, ESLint (zero warnings), unit tests, production build, package-identifier alignment check, Android debug APK (+ renderer presence check), and a **GUI smoke test** (Electron under Xvfb, screenshot artifact).
+- Release workflow: Windows + Linux desktop builds + signed Android APK, published to GitHub Releases on `v*` tags.
+
+### Changelog for v3.0.1 (this milestone)
+
+- **White-screen fix (root cause):** `build/` (renderer) is git-ignored, and the previous release workflow never ran `yarn build` before `electron-builder`, so packaged apps shipped without a renderer (`build/index.html`). The release workflow now builds the renderer and refuses to package if `build/index.html` is missing; CI has the same guard plus a GUI smoke test that launches the real app and verifies the renderer mounts.
+- **CI/CD hardening:** added ESLint (react-app preset, `--max-warnings 0`), Jest unit tests (i18n integrity between `en.json`/`zh-CN.json`, platform detection), `scripts/smoke-test.js` + `KOODO_SMOKE_TEST` mode in `main.js`, APK renderer-presence check, and an alignment check for package identifiers (`xyz.freekoodo.reader` in desktop `appId`, `capacitor.config.ts` and Android `applicationId`).
+- **Android narrow-screen adaptation:** new `src/platform/` abstraction (`isElectron` / `isCapacitor` / `isNarrowScreen` / `isMobileDevice` ...); the sidebar auto-collapses on screens ≤ 768 px, responsive header/dialog CSS (`src/assets/styles/responsive.css`); the reader engine gets `isMobile: yes` on native mobile.
+- **Android signing aligned:** dedicated release keystore `android/app/keystore/free-koodo-reader.jks` with credentials in `android/app/keystore.properties`; Gradle supports CI-secret override (`ANDROID_KEYSTORE_BASE64` ...); release APKs no longer use the debug key.
+- **Cleanup:** removed upstream leftovers (`upload.yml`, `release-appx.yml`, `src/upload.sh`, dead `chat-message` listener, unused imports/vars across 30+ files), fixed the `delayOnTouchStart` → invalid ReactSortable prop type errors, pinned missing Babel/privacy deps so builds and `yarn install` are warning-free.
+- **Version:** 3.0.1 (`versionCode` 3001).
 
 ### Completed
 
 - Removed all official cloud services, accounts, Pro/payment, and AI cloud features.
 - Removed macOS build artifacts and Apple-specific compatibility code.
-- WebDAV sync rewritten with the open-source `webdav` package.
-- WebDAV supports **HTTPS only**; credentials are stored locally and encrypted.
+- WebDAV sync rewritten with the open-source `webdav` package; **HTTPS only**; credentials stored locally and encrypted.
 - Local folder sync retained for desktop.
 - System TTS / custom TTS API retained.
 - Local OCR (System OCR, PaddleOCR, Tesseract) and External OCR API retained.
 - Local MDX dictionary retained.
-- README / AGENTS / CI updated.
-- Capacitor 8 scaffold added (`capacitor.config.ts` + `android/` project).
-- Android CI/CD added: CI builds a debug APK; release workflow builds and attaches an Android APK.
-- Package version bumped to `3.0.0` for the first Android artifacts.
+- README / AGENTS / HANDOFF / CI updated.
+- Capacitor 8 scaffold added (`capacitor.config.ts` + `android/` project); `src/platform/` detection layer added.
+- Android CI/CD: CI builds a debug APK + smoke-tests it; release workflow builds, signs and attaches an Android APK.
+- `npx cap sync android` keeps the custom `android/app/build.gradle` signing config (no regeneration conflicts).
 
 ## 2. Current Architecture
 
@@ -178,18 +186,9 @@ Use Tauri 2 mobile with a Rust backend.
 
 Phased plan:
 
-1. **Phase 0 — Abstraction layer** (not started)
-   - Create `src/platform/` with interfaces for:
-     - FileSystem
-     - Database
-     - Dialog
-     - OCR
-     - TTS
-     - Biometric
-     - Cloud sync
-   - Implement `ElectronPlatform` using existing `window.electronAPI`.
-   - Replace direct `window.electronAPI` calls with the platform service.
-   - Keep desktop behavior identical.
+1. **Phase 0 — Abstraction layer** (partially done)
+   - `src/platform/` created with environment detection (`isElectron`, `isCapacitor`, `isAndroid`, `isNarrowScreen`, `isCompactScreen`, `isMobileDevice`) — used by the sidebar auto-collapse and the reader `isMobile` flag.
+   - Remaining: full FileSystem / Database / Dialog / OCR / TTS / Cloud interfaces and Electron/Capacitor adapters, plus replacing direct `window.electronAPI` calls (still ~200+ references).
 
 2. **Phase 1 — Capacitor scaffold** (done)
    - Add `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, and needed plugins.
@@ -209,14 +208,16 @@ Phased plan:
    - OCR: keep Tesseract.js / PaddleOCR in WebView; optionally add native OCR.
    - Remove or disable desktop-only local folder sync.
 
-5. **Phase 4 — Package & signing** (partially done)
-   - Set applicationId to a `free`-prefixed value, e.g. `xyz.freekoodo.reader` (done).
-   - Create a dedicated Android signing keystore (`free-koodo-reader.keystore`) (pending).
-   - Add Android release workflow in CI (done; release builds use debug signing until a store keystore is configured).
+5. **Phase 4 — Package & signing** (done)
+   - Set applicationId to a `free`-prefixed value, `xyz.freekoodo.reader` (done, aligned with desktop `appId`).
+   - Dedicated Android signing keystore `android/app/keystore/free-koodo-reader.jks` + `android/app/keystore.properties` (done).
+   - Gradle reads the keystore from `keystore.properties`, or from CI secrets (`ANDROID_KEYSTORE_BASE64` / passwords) when provided; falls back to debug signing only without either.
+   - Android release workflow builds and attaches the **signed** APK (done).
 
-6. **Phase 5 — Verification** (partially done)
-   - Run existing web tests/typecheck/build (done in CI).
-   - Build Android APK in CI (done).
+6. **Phase 5 — Verification** (mostly done)
+   - Web tests/typecheck/lint/build run in CI (done).
+   - GUI smoke test on CI (done): renderer mounts under Xvfb; screenshot artifact.
+   - Android debug APK builds in CI + renderer presence check (done).
    - Manual test on Android emulator/device (pending):
      - Import books
      - Read EPUB/PDF/TXT
@@ -235,11 +236,11 @@ Phased plan:
 
 ## 8. Next Steps
 
-1. Create the platform abstraction layer in `src/platform/`.
+1. Extend the platform abstraction layer in `src/platform/` (Full FileSystem / Database / Dialog / OCR / TTS interfaces + `CapacitorPlatform` adapter).
 2. Implement the Android platform adapter (`CapacitorPlatform`).
 3. Adapt Android-specific features (file picker, TTS, OCR, storage paths).
-4. Add a dedicated release keystore and wire it into CI signing.
-5. Manual test on Android emulator/device.
+4. Manual test on Android emulator/device (import books, reading, WebDAV sync, TTS, OCR, MDX dictionary).
+5. Optional: run the Android release APK through `apkanalyzer`/emulator install in CI.
 
 ## 9. Open Questions
 

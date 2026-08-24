@@ -1,0 +1,102 @@
+/* =============================================================================
+   Narrow-screen (Android / phones) adaptation.
+
+   On narrow screens the JS platform layer auto-collapses the sidebar into an
+   icon strip; these rules keep the remaining header, content area and dialogs
+   inside the viewport width. Defaults stay untouched on desktop.
+   ============================================================================= */
+
+@media screen and (max-width: 768px) {
+  /* ---- header ----
+     The header block flows below the full-height sidebar, so its children are
+     absolutely positioned against the fixed #root. Keep `.header`
+     unpositioned and position the children explicitly. */
+  .header {
+    margin-left: 70px !important; /* collapsed sidebar icon strip */
+  }
+  .header-search-container {
+    position: absolute !important;
+    top: 23px !important;
+    left: 78px !important;
+    right: auto !important;
+    margin-left: 0 !important;
+    width: calc(100vw - 190px) !important;
+    min-width: 140px !important;
+  }
+  .setting-icon-parrent {
+    position: absolute !important;
+    top: 18px !important;
+    left: auto !important;
+    right: 8px !important;
+    margin-left: 0 !important;
+  }
+  /* On phones keep only the settings gear in the header; sort and sync are
+     available in settings/context menus. */
+  .setting-icon-container:has(.icon-sort-desc),
+  .setting-icon-container:has(.icon-sync) {
+    display: none !important;
+  }
+  .header-report-container {
+    display: none !important;
+  }
+  .only-local-container {
+    display: none !important;
+  }
+  .download-demo-book {
+    display: none !important;
+  }
+
+  /* ---- content area (offset by collapsed sidebar) ---- */
+  .book-list-container-parent,
+  .book-list-header {
+    left: 70px !important;
+    width: calc(100% - 70px) !important;
+  }
+  .empty-page-container {
+    left: 70px !important;
+    width: calc(100vw - 70px) !important;
+  }
+  .book-list-header-right {
+    gap: 4px !important;
+  }
+  .book-list-total-page {
+    font-size: 13px !important;
+  }
+  .lang-setting-dropdown {
+    width: 56px !important;
+  }
+  .book-card-scale-slider {
+    max-width: 70px !important;
+  }
+
+  /* ---- dialogs / popups ---- */
+  .setting-dialog-container {
+    width: calc(100vw - 16px) !important;
+    height: calc(100vh - 16px) !important;
+    left: 8px !important;
+    top: 8px !important;
+  }
+  .backup-page-container,
+  .add-dialog-container,
+  .delete-dialog-container,
+  .edit-dialog-container,
+  .metadata-dialog-container,
+  .action-dialog-container,
+  .annotation-dialog-container,
+  .sort-dialog-container,
+  .popup-option-dialog-container {
+    width: calc(100vw - 24px) !important;
+    max-width: 100% !important;
+    left: 12px !important;
+  }
+  .loading-dialog {
+    width: calc(100vw - 24px) !important;
+    max-width: 100% !important;
+  }
+
+  /* ---- footer / bottom actions ---- */
+  .footer {
+    transform: scale(0.9) !important;
+    transform-origin: bottom right !important;
+  }
+}

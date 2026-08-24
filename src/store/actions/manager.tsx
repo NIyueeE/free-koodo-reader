@@ -141,14 +141,13 @@ export function handleFetchBooks() {
       if (bookSortCode.order === 1) {
         sortedKeys = sortedKeys.reverse();
       }
-      sortedKeys = sortedKeys;
       bookList = sortedKeys.map((key: string) => {
         return { key };
       });
     } else if (sortField === "readingTime") {
       let allBookKeys = await DatabaseService.getAllRecordKeys("books");
       let durationObj = ConfigService.getAllObjectConfig("readingTime");
-      var sortable: any[] = [];
+      const sortable: any[] = [];
       for (let obj in durationObj) {
         sortable.push([obj, durationObj[obj]]);
       }
@@ -163,14 +162,13 @@ export function handleFetchBooks() {
       if (bookSortCode.order === 1) {
         sortedKeys = sortedKeys.reverse();
       }
-      sortedKeys = sortedKeys;
       bookList = sortedKeys.map((key: string) => {
         return { key };
       });
     } else if (sortField === "percentage") {
       let allBookKeys = await DatabaseService.getAllRecordKeys("books");
       let locationObj = ConfigService.getAllObjectConfig("recordLocation");
-      var sortable: any[] = [];
+      const sortable: any[] = [];
       for (let obj in locationObj) {
         sortable.push([obj, locationObj[obj].percentage || 0]);
       }
@@ -185,7 +183,6 @@ export function handleFetchBooks() {
       if (bookSortCode.order === 1) {
         sortedKeys = sortedKeys.reverse();
       }
-      sortedKeys = sortedKeys;
       bookList = sortedKeys.map((key: string) => {
         return { key };
       });

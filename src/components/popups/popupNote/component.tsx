@@ -1,7 +1,6 @@
 import React from "react";
 import "./popupNote.css";
 import Note from "../../../models/Note";
-import _ from "underscore";
 import { PopupNoteProps, PopupNoteState } from "./interface";
 import NoteTag from "../../noteTag";
 import { Trans } from "react-i18next";

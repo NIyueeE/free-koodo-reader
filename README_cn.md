@@ -62,9 +62,24 @@ yarn android:build:release # 构建 release APK
 
 仓库使用 GitHub Actions：
 
-- `ci.yml` — 每次推送/PR 到 `main` 时执行类型检查、Web 生产构建和 Android debug APK 构建。
-- `release.yml` — 手动触发或推送 `v*` 标签时构建桌面端（Windows/Linux）和 Android 发布包。
-- `docker-publish.yml` — 发布 Docker 镜像。
+- `ci.yml` — 每次推送/PR 到 `main` 时执行：
+  - TypeScript 类型检查
+  - ESLint（零警告，有警告即失败）
+  - 单元测试（i18n 完整性、平台检测）
+  - 渲染器生产构建（`build/` 被 git 忽略，因此构建必须显式执行 —— 缺少渲染器正是历史白屏 bug 的根因）
+  - 包标识一致性检查（桌面 `appId` == Capacitor `appId` == Android `applicationId`）
+  - Android debug APK 构建 + 渲染器存在性检查
+  - **GUI 冒烟测试**：在 Xvfb 下启动真实 Electron 应用，验证渲染器完成挂载（不会白屏），并上传截图工件
+- `release.yml` — 手动触发或推送 `v*` 标签时构建桌面端（Windows/Linux）和 Android 发布包：
+  - 打包前始终先构建渲染器，`build/index.html` 缺失时直接失败，避免发布白屏版本
+  - Android release APK 使用专用签名文件 `android/app/keystore/free-koodo-reader.jks`（凭据在 `android/app/keystore.properties`，可通过 CI Secrets `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` 覆盖）
+- `docker-publish.yml` — 发布 Docker 镜像（自托管 Web 部署，手动触发）。
+
+## Android
+
+- 包名：`xyz.freekoodo.reader`（与桌面端 `appId` 一致）。
+- 窄屏（≤ 768px）下主界面侧边栏自动折叠为图标栏，头部搜索框、设置按钮与对话框均有响应式布局，手机和平板可用性良好。
+- 签名：release APK 使用 `free-koodo-reader.jks` 签名（store password 与 key password 位于 `keystore.properties`）。
 
 ## 仓库
 

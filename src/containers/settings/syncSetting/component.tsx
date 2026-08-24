@@ -4,7 +4,6 @@ import { Trans } from "react-i18next";
 import i18n from "../../../i18n";
 import { removeCloudConfig } from "../../../utils/file/common";
 import { isElectron } from "react-device-detect";
-import _ from "underscore";
 import { syncSettingList } from "../../../constants/settingList";
 
 import toast from "react-hot-toast";
@@ -30,7 +29,6 @@ import {
 import SyncService from "../../../utils/storage/syncService";
 import BookUtil from "../../../utils/file/bookUtil";
 import Book from "../../../models/Book";
-import ConfigUtil from "../../../utils/file/configUtil";
 import TokenService from "../../../utils/storage/tokenService";
 declare var window: any;
 class SyncSetting extends React.Component<SettingInfoProps, SettingInfoState> {
