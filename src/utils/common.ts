@@ -1051,9 +1051,14 @@ export const testConnection = async (driveName: string, driveConfig: any) => {
     // sync utility can reject (network / auth / invalid URL), which used to
     // produce an unhandled rejection and a stuck loading toast.
     console.error("Connection test failed:", error);
-    toast.error(i18n.t("Connection failed"), {
-      id: "testing-connection-id",
-    });
+    const detail = error instanceof Error ? error.message : String(error);
+    toast.error(
+      i18n.t("Connection failed") +
+        (detail && detail.length <= 120 ? ": " + detail : ""),
+      {
+        id: "testing-connection-id",
+      }
+    );
     return false;
   }
 };

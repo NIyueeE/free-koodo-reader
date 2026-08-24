@@ -1521,13 +1521,7 @@ const createMainWin = () => {
   });
   ipcMain.handle("cloud-upload", async (event, config) => {
     try {
-      let syncUtil = await getSyncUtil(config, config.isUseCache);
-      let result = await syncUtil.uploadFile(
-        config.fileName,
-        config.fileName,
-        config.type
-      );
-      return result;
+        let syncUtil = await getSyncUtil(config, config.isUseCache);        let result = await syncUtil.uploadFile(          config.fileName,          config.fileName,          config.type        );        return result;
     } catch (error) {
       // Never reject: the renderer's "test connection" flow awaits this and
       // an unhandled rejection left the loading toast stuck forever.
@@ -1537,41 +1531,77 @@ const createMainWin = () => {
   });
 
   ipcMain.handle("cloud-download", async (event, config) => {
-    let syncUtil = await getSyncUtil(config);
-    let result = await syncUtil.downloadFile(
-      config.fileName,
-      (config.isTemp ? "temp-" : "") + config.fileName,
-      config.type
-    );
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config);
+      let result = await syncUtil.downloadFile(
+        config.fileName,
+        (config.isTemp ? "temp-" : "") + config.fileName,
+        config.type
+      );
+      return result;
+    } catch (error) {
+      console.error("cloud-download failed:", error);
+      return false;
+    }
+
   });
   ipcMain.handle("cloud-progress", async (event, config) => {
-    let syncUtil = await getSyncUtil(config);
-    let result = syncUtil.getDownloadedSize();
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config);
+      let result = syncUtil.getDownloadedSize();
+      return result;
+    } catch (error) {
+      console.error("cloud-progress failed:", error);
+      return 0;
+    }
+
   });
   ipcMain.handle("picker-download", async (event, config) => {
-    let pickerUtil = await getPickerUtil(config);
-    let result = await pickerUtil.remote.downloadFile(
-      config.sourcePath,
-      config.destPath
-    );
-    return result;
+    try {
+      let pickerUtil = await getPickerUtil(config);
+      let result = await pickerUtil.remote.downloadFile(
+        config.sourcePath,
+        config.destPath
+      );
+      return result;
+    } catch (error) {
+      console.error("picker-download failed:", error);
+      return false;
+    }
+
   });
   ipcMain.handle("picker-progress", async (event, config) => {
-    let pickerUtil = await getPickerUtil(config);
-    let result = await pickerUtil.getDownloadedSize();
-    return result;
+    try {
+      let pickerUtil = await getPickerUtil(config);
+      let result = await pickerUtil.getDownloadedSize();
+      return result;
+    } catch (error) {
+      console.error("picker-progress failed:", error);
+      return 0;
+    }
+
   });
   ipcMain.handle("cloud-reset", async (event, config) => {
-    let syncUtil = await getSyncUtil(config);
-    let result = syncUtil.resetCounters();
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config);
+      let result = syncUtil.resetCounters();
+      return result;
+    } catch (error) {
+      console.error("cloud-reset failed:", error);
+      return false;
+    }
+
   });
   ipcMain.handle("cloud-stats", async (event, config) => {
-    let syncUtil = await getSyncUtil(config);
-    let result = syncUtil.getStats();
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config);
+      let result = syncUtil.getStats();
+      return result;
+    } catch (error) {
+      console.error("cloud-stats failed:", error);
+      return { total: 0, completed: 0, downloadedSize: 0 };
+    }
+
   });
   ipcMain.handle("cloud-delete", async (event, config) => {
     try {
@@ -1585,19 +1615,37 @@ const createMainWin = () => {
   });
 
   ipcMain.handle("cloud-list", async (event, config) => {
-    let syncUtil = await getSyncUtil(config);
-    let result = await syncUtil.listFiles(config.type);
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config);
+      let result = await syncUtil.listFiles(config.type);
+      return result;
+    } catch (error) {
+      console.error("cloud-list failed:", error);
+      return [];
+    }
+
   });
   ipcMain.handle("picker-list", async (event, config) => {
-    let pickerUtil = await getPickerUtil(config);
-    let result = await pickerUtil.listFileInfos(config.currentPath);
-    return result;
+    try {
+      let pickerUtil = await getPickerUtil(config);
+      let result = await pickerUtil.listFileInfos(config.currentPath);
+      return result;
+    } catch (error) {
+      console.error("picker-list failed:", error);
+      return [];
+    }
+
   });
   ipcMain.handle("cloud-exist", async (event, config) => {
-    let syncUtil = await getSyncUtil(config);
-    let result = await syncUtil.isExist(config.fileName, config.type);
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config);
+      let result = await syncUtil.isExist(config.fileName, config.type);
+      return result;
+    } catch (error) {
+      console.error("cloud-exist failed:", error);
+      return false;
+    }
+
   });
   ipcMain.handle("cloud-close", async (event, config) => {
     removeSyncUtil(config);
@@ -1980,6 +2028,7 @@ const createMainWin = () => {
     return result;
   });
   ipcMain.handle("database-command", async (event, config) => {
+    try {
     const { SqlStatement } =
       await import("./src/assets/lib/kookit-extra.min.mjs");
     let { statement, statementType, executeType, dbName, data, storagePath } =
@@ -2007,6 +2056,12 @@ const createMainWin = () => {
       return SqlStatement.sqliteToJson[dbName](result);
     } else {
       return result;
+    }
+    } catch (error) {
+      console.error("database-command failed:", error);
+      // Degrade to safe empty values instead of rejecting the IPC call.
+      const { executeType } = config || {};
+      return executeType === "all" ? [] : executeType === "get" ? null : undefined;
     }
   });
   ipcMain.handle("close-database", async (event, config) => {

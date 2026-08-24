@@ -223,7 +223,9 @@ class TTSUtil {
   }
   static async clearAudioPaths() {
     if (!isElectron) return;
-    window.electronAPI.invoke("clear-tts");
+    window.electronAPI.invoke("clear-tts").catch(() => {
+      /* best-effort cleanup; failure is not user-actionable */
+    });
   }
   static getAudioPaths() {
     return this.audioPaths;

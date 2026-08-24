@@ -124,9 +124,10 @@ describe("testConnection (Electron branch)", () => {
     const result = await testConnection("webdav", driveConfig);
     // Resolves with false - the promise must NOT hang or reject.
     expect(result).toBe(false);
-    expect(mockToast.error).toHaveBeenCalledWith("Connection failed", {
-      id: "testing-connection-id",
-    });
+    expect(mockToast.error).toHaveBeenCalledWith(
+      expect.stringContaining("Connection failed"),
+      { id: "testing-connection-id" }
+    );
     // The loading toast is replaced; success toast must not appear.
     expect(mockToast.success).not.toHaveBeenCalled();
   });
@@ -135,8 +136,9 @@ describe("testConnection (Electron branch)", () => {
     mockInvoke.mockResolvedValueOnce(false);
     const result = await testConnection("webdav", driveConfig);
     expect(result).toBe(false);
-    expect(mockToast.error).toHaveBeenCalledWith("Connection failed", {
-      id: "testing-connection-id",
-    });
+    expect(mockToast.error).toHaveBeenCalledWith(
+      expect.stringContaining("Connection failed"),
+      { id: "testing-connection-id" }
+    );
   });
 });

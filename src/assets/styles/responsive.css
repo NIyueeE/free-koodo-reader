@@ -75,6 +75,41 @@
     height: calc(100vh - 16px) !important;
     left: 8px !important;
     top: 8px !important;
+    /* Stack sidebar above content so the content pane keeps a usable width. */
+    flex-direction: column !important;
+  }
+  .setting-dialog-sidebar {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 10px 8px !important;
+  }
+  .setting-dialog-sidebar-title {
+    display: none !important;
+  }
+  .setting-dialog-sidebar-item {
+    white-space: nowrap !important;
+    margin: 0 2px !important;
+    padding: 8px 10px !important;
+    flex-shrink: 0 !important;
+    font-size: 13px !important;
+  }
+  .setting-dialog-main-header {
+    font-size: 18px !important;
+    padding: 14px 16px 8px !important;
+  }
+  .setting-dialog-new-title {
+    margin-left: 16px !important;
+    width: calc(100% - 32px) !important;
+    font-size: 14px !important;
+  }
+  .setting-option-subtitle {
+    margin-left: 16px !important;
+    font-size: 12px !important;
   }
   .backup-page-container,
   .add-dialog-container,
