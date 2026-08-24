@@ -11,6 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    timeout-minutes: 120
 
     env:
       SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
@@ -41,6 +42,12 @@ jobs:
 
       - name: TypeScript type check
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
+
+      - name: ESLint (zero warnings allowed)
+        run: yarn lint --max-warnings 0
+
+      - name: Unit + smoke tests (i18n / platform / WebDAV live / IPC contract / preload / database service)
+        run: CI=true yarn test --watchAll=false --passWithNoTests
 
       # Critical: the renderer bundle is not committed (build/ is git-ignored).
       # Packaging without it produces an app with a blank/white screen.
@@ -120,6 +127,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    timeout-minutes: 60
 
     steps:
       - name: Check out Git repository
@@ -167,7 +175,16 @@ jobs:
             exit 1
           fi
           if ! unzip -l "$APK" | grep -qv "META-INF/.*\.RSA"; then
-            echo "::warning::APK appears unsigned"
+            echo "::error::APK appears unsigned"
+            exit 1
+          fi
+          # Verify the release keystore signature (apksigner from the SDK).
+          BUILD_TOOLS=$(ls -d ${ANDROID_HOME}/build-tools/*/ 2>/dev/null | sort -V | tail -1)
+          APKSIGNER="${BUILD_TOOLS}apksigner"
+          if [ -x "${APKSIGNER}" ]; then
+            "${APKSIGNER}" verify --print-certs "$APK" | head -3
+          else
+            echo "::warning::apksigner not found; skipping signature certificate check"
           fi
           echo "APK checks passed"
 

@@ -1,4 +1,6 @@
 import { createClient, WebDAVClient } from "webdav";
+import type { Agent as HttpAgent } from "http";
+import type { Agent as HttpsAgent } from "https";
 
 /**
  * free-koodo-reader: minimal WebDAV sync implementation using the open-source
@@ -7,7 +9,14 @@ import { createClient, WebDAVClient } from "webdav";
  */
 export default class WebDavService {
   private client: WebDAVClient;
-  private config: { url: string; dir?: string; username?: string; password?: string };
+  private config: {
+    url: string;
+    dir?: string;
+    username?: string;
+    password?: string;
+    httpAgent?: HttpAgent;
+    httpsAgent?: HttpsAgent;
+  };
   private downloadedSize = 0;
   private completed = 0;
 
@@ -24,10 +33,14 @@ export default class WebDavService {
       dir: config.dir || "",
       username: config.username || "",
       password: config.password || "",
+      httpAgent: config.httpAgent || undefined,
+      httpsAgent: config.httpsAgent || undefined,
     };
     this.client = createClient(this.config.url, {
       username: this.config.username,
       password: this.config.password,
+      httpAgent: this.config.httpAgent,
+      httpsAgent: this.config.httpsAgent,
     });
   }
 
@@ -58,6 +71,19 @@ export default class WebDavService {
 
   async deleteFile(fileName: string, category: string) {
     await this.client.deleteFile(this.getPath(category, fileName));
+    return true;
+  }
+
+  async createDirectory(category: string): Promise<boolean> {
+    try {
+      await this.client.createDirectory(this.getPath(category));
+    } catch (error: any) {
+      // 405 / 301 responses mean the directory already exists.
+      if ([301, 302, 405, 409].includes(error?.status)) {
+        return false;
+      }
+      throw error;
+    }
     return true;
   }
 

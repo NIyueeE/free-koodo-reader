@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本文件为 AI 编码助手在本仓库工作时的完整指引。更详细的背景请同时参考 `README.md` 和 `HANDOFF.md`。
+本文件为 AI 编码助手在本仓库工作时的完整指引。更详细的背景请同时参考 `README.md`（英文）与 `README_cn.md`（中文）。
 
 ## 项目简介
 
@@ -17,29 +17,40 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 
 ## 重要提醒
 
-**不要尝试读取或修改** `src/assets/lib/` 下的这些文件：
-- `kookit-extra.min.mjs`
-- `kookit.min.js`
-- `kookit-extra-browser.min.js`
+**不要尝试读取或修改** `src/assets/lib/` 下的混淆/压缩文件：
+- `kookit-extra.min.mjs`、`kookit.min.js`、`kookit-extra-browser.min.js`
 
-这些是混淆/压缩后的产物，无法阅读。如需查阅源码，请直接读取本地源码仓库：
-- `D:\Project\kookit`
-- `D:\Project\kookit-extra`
+这些是混淆/压缩后的产物，无法阅读。如需查阅源码，请直接读取本地源码仓库：`D:\Project\kookit`、`D:\Project\kookit-extra`。
 
 ## 当前目标
 
-下一个目标是**完成 Android 端开发**。当前推荐方案是：
+下一个目标是**完成 Android 端开发**，推荐方案（详见下文计划）：
 
-- 使用 **Capacitor** 包装现有 Web 构建。
-- 在 `src/platform/` 中建立平台抽象层，替换 `window.electronAPI` 的直接调用。
+- 使用 **Capacitor** 包装现有 Web 构建（已完成脚手架与发布链路）；
+- 在 `src/platform/` 建立平台抽象层，替换 `window.electronAPI` 的直接调用；
 - 桌面端继续走 Electron，Android 端走 Capacitor。
-- 详细分析和迁移计划见 `HANDOFF.md`。
+
+### Android 迁移计划（当前状态）
+
+1. **平台抽象层**（部分完成）：`src/platform/` 已有环境检测（`isElectron` / `isCapacitor` / `isAndroid` / `isNarrowScreen` / `isMobileDevice`），被侧边栏自动折叠与阅读器 `isMobile` 使用；剩余工作是把 232 处 `window.electronAPI` 引用逐步迁移到 FileSystem / Database / Dialog / OCR / TTS / Cloud 接口。
+2. **Capacitor 脚手架**（完成）：`capacitor.config.ts` + `android/` 工程；`npx cap sync android` 只复制 Web 资产与插件，不会覆盖 `android/app/build.gradle` 的签名配置。
+3. **Android 平台适配**（未开始）：`CapacitorPlatform` 适配器，文件/数据库（sql.js WASM 或 Capacitor SQLite）/TTS/OCR/对话框。
+4. **包名与签名**（完成）：`xyz.freekoodo.reader` 三处对齐；release APK 使用专用 keystore（见"Android 发布说明"）。
+5. **验证**（部分完成）：CI 有 GUI 冒烟、debug/release APK 构建与渲染器检查；**待办：Android 真机/模拟器手动测试**（导入、阅读、WebDAV 同步、TTS、OCR、MDX 词典）。
+
+### 关键取舍
+
+- 不要重写渲染层：WebView 直接复用现有 React/Redux + 阅读引擎（引擎自带 `ReactNativeWebView` 支持）。
+- 不要重新引入官方云服务/账号/Pro/AI 云。
+- 本地文件夹同步是桌面概念，Android 用应用私有存储 / SAF。
+- 若上游移动端源码开源，可重新评估方案。
 
 ## 默认分支与 CI
 
-- 默认分支：`main`
-- 开发流程：在 `main` 上直接修改并推送，CI 会自动运行类型检查、ESLint（零警告）、单元测试、生产构建、GUI 冒烟测试（Xvfb 下启动真实 Electron 验证渲染器挂载）和 Android debug APK 构建。
+- 默认分支：`main`；在 `main` 上直接修改并推送，CI 自动运行：类型检查 → ESLint（零警告）→ 单元与冒烟测试 → 生产构建 → GUI 冒烟测试（Xvfb 下启动真实 Electron 验证渲染器挂载）→ Android debug APK（含渲染器存在性检查、包名一致性检查）。带并发取消与作业超时。
+- **测试套件（`yarn test`，38 个用例）**：i18n 完整性（en↔zh-CN key 一致）、平台检测、WebDAV 单元 + 真实 HTTPS 服务器冒烟、**IPC 契约**（preload 白名单 ↔ main.js 处理器双向校验）、**preload 安全边界**（通道白名单/fs/path/crypto/错误传播）、**数据库服务**（isElectron=false 浏览器模式 CRUD）。新增关键逻辑时同步补充测试。
 - **注意**：`build/`（渲染器产物）被 git 忽略，任何打包（`yarn release`、release workflow）都必须先执行 `yarn build`，否则会发布白屏版本。CI 与 release workflow 已内置缺失检查与冒烟测试。
+- **WebDAV 冒烟测试**：`yarn test` 中的 `webdavLive.test.ts` 会启动真实 HTTPS WebDAV 服务器（自签名测试证书 fixture），用生产 `WebDavService` 跑完整的 建目录→上传→存在性→列表→下载比对→删除，并校验 HTTPS-only 策略。修改 `src/utils/storage/webdavService.ts` 后必须运行 `yarn test`。
 
 ## 关键 IPC 通道
 
@@ -50,14 +61,14 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 
 ## Redux 与容器模式
 
-- Redux 切片：`book`, `reader`, `manager`, `viewArea`, `backupPage`, `sidebar`, `progressPanel`；每个切片在 `src/store/actions/` 和 `src/store/reducers/` 中各有一个文件。
-- 状态类型使用 `stateType`（定义在 `src/store/index.tsx`），所有 `mapStateToProps` 应使用此类型。
+- Redux 切片：`book`, `reader`, `manager`, `viewArea`, `backupPage`, `sidebar`, `progressPanel`；每个切片在 `src/store/actions/` 与 `src/store/reducers/` 各有一个文件。
+- 状态类型使用 `stateType`（`src/store/index.tsx`）；所有 `mapStateToProps` 都应使用它。
 - Container 模式：`index.tsx` (Redux connect) → `component.tsx` → `interface.tsx`，位于 `src/containers/` 下。
 
 ## 页面路由与格式支持
 
-- 页面路由：`/manager/*`（主界面：书库、笔记、回收站等）；`/epub`、`/pdf`、`/mobi`、`/txt`、`/md` 等格式路径（阅读器）；`/login`、`/stats`、`/redirect`。
-- 支持的电子书格式：EPUB, PDF, MOBI, AZW3, AZW, TXT, FB2, CBR/CBZ/CBT/CB7, MD, DOCX, HTML/XML/XHTML/MHTML/HTM。
+- 路由：`/manager/*` 主界面（书库、笔记、回收站）；`/epub`、`/pdf`、`/mobi`、`/txt`、`/md` 等阅读器路径；`/login`、`/stats`、`/redirect`。
+- 支持格式：EPUB, PDF, MOBI, AZW3, AZW, TXT, FB2, CBR/CBZ/CBT/CB7, MD, DOCX, HTML/XML/XHTML/MHTML/HTM。
 
 ## 关键约束
 
@@ -69,11 +80,11 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
   - 保持 Web 构建始终可用；桌面端继续走 Electron。
   - Android 数据库优先使用 `sql.js` WASM 或 Capacitor SQLite，不使用 `better-sqlite3`。
   - Android 文件访问使用 Capacitor Filesystem / Storage Access Framework，不使用 Electron `fs`。
-  - 新增 Android 相关代码时同步更新 `HANDOFF.md`。
+  - 新增 Android 相关代码时同步更新本文件与 README。
 - 用户可见文本必须使用 `react-i18next` 的 `t("key")`，不得硬编码。
 - TypeScript 避免 `any`，在 `interface.tsx` 中定义类型。
 - 不要从渲染进程直接操作 SQLite；所有数据库操作必须通过 `database-command` IPC。
-- 新增 i18n key 需在 `src/assets/locales/en.json` 中添加。
+- 新增 i18n key 需在 `src/assets/locales/en.json` 中添加（zh-CN 同步补充；CI 有 en↔zh-CN key 一致性测试）。
 - 修改 `src/utils/reader/` 下工具函数会影响 iframe 中书籍渲染，需手动回归测试。
 - 添加窗口打开通道时遵循 `new-tab` → `WebContentsView` / `open-book` → `BrowserWindow` 模式。
 - 所有 IPC 参数需校验后再执行文件系统/数据库/Shell 操作。
@@ -83,10 +94,10 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 
 ```bash
 yarn          # 安装依赖
-yarn dev      # 桌面开发模式
+yarn dev      # 桌面开发模式（Electron + React 热重载）
 yarn start    # Web 开发模式
 yarn build    # 生产构建（打包前必须执行，build/ 被 git 忽略）
-yarn test     # 运行测试
+yarn test     # 单元测试 + WebDAV/平台/i18n 冒烟测试（CI 同款）
 yarn lint     # ESLint（CI 要求零警告）
 node scripts/smoke-test.js  # GUI 冒烟测试（需 Xvfb，等价于 CI 的 smoke-test job）
 yarn release  # 打包分发
@@ -100,7 +111,6 @@ yarn android:build:release # 构建 Android release APK
 
 ```
 .
-├── HANDOFF.md              # 项目交接 / Android 迁移计划
 ├── main.js                 # Electron 主进程
 ├── httpserver/             # Go HTTP 服务 (KOReader/OPDS)
 ├── public/                 # 静态资源 + WASM 库
@@ -110,22 +120,13 @@ yarn android:build:release # 构建 Android release APK
 │   ├── assets/             # 阅读引擎、多语言、样式、图片
 │   ├── components/         # 可复用 UI 组件（books, dialogs, popups, searchBox ...）
 │   ├── constants/          # 常量定义
-│   ├── containers/         # 容器组件 (Redux stateful)
-│   │   ├── lists/          # 列表 (bookList, cardList, noteList, navList, contentList)
-│   │   ├── panels/         # 面板 (navigationPanel, operationPanel, progressPanel, settingPanel)
-│   │   ├── settings/       # 设置页面各选项卡
-│   │   ├── sidebar/        # 侧边栏
-│   │   └── viewer/         # 书籍阅读视图
+│   ├── containers/         # 容器组件 (Redux stateful)：lists / panels / settings / sidebar / viewer
 │   ├── models/             # 数据模型 (Book, Bookmark, Note, HtmlBook, Plugin)
 │   ├── pages/              # 页面级组件 (manager, reader, login, redirect, stats)
 │   ├── platform/           # 平台抽象层（Electron / Capacitor / Web 检测与适配）
 │   ├── router/             # React Router 路由配置
 │   ├── store/              # Redux (actions + reducers)
-│   └── utils/              # 工具函数
-│       ├── file/           # 文件操作 (bookUtil, coverUtil, fontUtil, sqlUtil, export, backup, restore)
-│       ├── reader/         # 阅读器逻辑 (highlightUtil, noteUtil, styleUtil, ttsUtil, themeUtil, etc.)
-│       ├── request/        # HTTP 请求
-│       └── storage/        # 存储服务 (databaseService, syncService)
+│   └── utils/              # file / reader / request / storage 工具
 ├── scripts/                # 构建/测试脚本（smoke-test.js 等）
 └── assets/                 # 构建资源 (图标、安装配置)
 ```

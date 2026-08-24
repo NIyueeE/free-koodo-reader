@@ -1,7 +1,7 @@
 {
   "name": "free-koodo-reader",
   "main": "main.js",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
     "name": "Free Koodo Reader",
@@ -116,6 +116,7 @@
     "source-map-explorer": "^2.5.2",
     "typescript": "^5.9.3",
     "wait-on": "^7.0.1",
+    "webdav-server": "^2.6.3",
     "webpack": "^5.88.2"
   },
   "scripts": {
@@ -137,6 +138,11 @@
     "rebuild": "electron-rebuild -f -w better-sqlite3"
   },
   "homepage": "./",
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(webdav|@buttercup/fetch|hot-patcher|layerr|node-fetch|url-join|data-uri-to-buffer|fetch-blob|formdata-polyfill)/)"
+    ]
+  },
   "build": {
     "appId": "xyz.freekoodo.reader",
     "productName": "Free Koodo Reader",

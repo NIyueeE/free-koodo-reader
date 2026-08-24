@@ -60,19 +60,20 @@ yarn android:build:release # 构建 release APK
 
 ## CI/CD
 
-仓库使用 GitHub Actions：
+仓库使用 GitHub Actions（带并发取消与作业超时）：
 
 - `ci.yml` — 每次推送/PR 到 `main` 时执行：
   - TypeScript 类型检查
   - ESLint（零警告，有警告即失败）
-  - 单元测试（i18n 完整性、平台检测）
+  - 单元与冒烟测试（`yarn test`）：i18n 完整性、平台检测、**真实 HTTPS WebDAV 冒烟**（完整同步往返）、**IPC 契约**（preload 白名单 ↔ main.js 处理器）、**preload 安全边界**、**数据库服务**（浏览器模式 CRUD）
   - 渲染器生产构建（`build/` 被 git 忽略，因此构建必须显式执行 —— 缺少渲染器正是历史白屏 bug 的根因）
   - 包标识一致性检查（桌面 `appId` == Capacitor `appId` == Android `applicationId`）
   - Android debug APK 构建 + 渲染器存在性检查
   - **GUI 冒烟测试**：在 Xvfb 下启动真实 Electron 应用，验证渲染器完成挂载（不会白屏），并上传截图工件
 - `release.yml` — 手动触发或推送 `v*` 标签时构建桌面端（Windows/Linux）和 Android 发布包：
+  - 打包前先执行与 CI 相同的类型检查 / ESLint / 单元与冒烟测试
   - 打包前始终先构建渲染器，`build/index.html` 缺失时直接失败，避免发布白屏版本
-  - Android release APK 使用专用签名文件 `android/app/keystore/free-koodo-reader.jks`（凭据在 `android/app/keystore.properties`，可通过 CI Secrets `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` 覆盖）
+  - Android release APK 使用专用签名文件 `android/app/keystore/free-koodo-reader.jks`（凭据在 `android/app/keystore.properties`，可通过 CI Secrets `ANDROID_KEYSTORE_BASE64` / `ANDROID_KEYSTORE_PASSWORD` / `ANDROID_KEY_ALIAS` / `ANDROID_KEY_PASSWORD` 覆盖），并用 `apksigner` 校验签名证书
 - `docker-publish.yml` — 发布 Docker 镜像（自托管 Web 部署，手动触发）。
 
 ## Android
