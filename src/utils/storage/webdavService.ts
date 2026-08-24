@@ -1,14 +1,13 @@
 import { createClient, WebDAVClient } from "webdav";
-import { Agent as HttpAgent } from "http";
-import { Agent as HttpsAgent } from "https";
+import type { Agent as HttpAgent } from "http";
+import type { Agent as HttpsAgent } from "https";
 
 /**
- * Idle-socket timeout for HTTP/HTTPS agents. Prevents sync operations (and
- * the "test connection" flow) from hanging forever on a stalled server.
- */
-const DEFAULT_AGENT_TIMEOUT_MS = 15000;
-
-/**
+ * Note: this module is bundled into the browser/web build, so it must not
+ * import Node built-ins at runtime. Agents (with optional idle timeouts) are
+ * provided by callers; the Electron main process injects timeout-bounded
+ * agents in main.js (`createWebDavSyncUtil`).
+ *
  * free-koodo-reader: minimal WebDAV sync implementation using the open-source
  * `webdav` package. It intentionally supports HTTPS only and stores credentials
  * locally (TokenService already encrypts them).
@@ -39,13 +38,8 @@ export default class WebDavService {
       dir: config.dir || "",
       username: config.username || "",
       password: config.password || "",
-      // Default agents bound to an idle timeout so stalled connections
-      // fail instead of hanging (overridable via custom agents).
-      httpAgent:
-        config.httpAgent || new HttpAgent({ timeout: DEFAULT_AGENT_TIMEOUT_MS }),
-      httpsAgent:
-        config.httpsAgent ||
-        new HttpsAgent({ timeout: DEFAULT_AGENT_TIMEOUT_MS }),
+      httpAgent: config.httpAgent || undefined,
+      httpsAgent: config.httpsAgent || undefined,
     };
     this.client = createClient(this.config.url, {
       username: this.config.username,

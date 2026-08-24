@@ -739,9 +739,15 @@ const createWebDavSyncUtil = (config) => {
   if (!config || !config.url || !/^https:\/\//i.test(config.url)) {
     throw new Error("WebDAV requires HTTPS");
   }
+  // Bound the idle socket so a stalled server fails within 15s instead of
+  // hanging the "test connection" / sync flow indefinitely.
+  const httpAgent = new (require("http").Agent)({ timeout: 15000 });
+  const httpsAgent = new (require("https").Agent)({ timeout: 15000 });
   const client = webdav.createClient(config.url, {
     username: config.username || "",
     password: config.password || "",
+    httpAgent,
+    httpsAgent,
   });
   const dir = config.dir || "";
   const pathFor = (category, fileName) =>
