@@ -61,9 +61,29 @@ child.stdout.on("data", (chunk) => {
   }
 });
 
+// Chromium/Xvfb environment noise that contains no diagnostic value.
+const STDOISE_LINES = [
+  "dri3 extension not supported",
+  "InitializeSandbox() called with multiple threads",
+  "VizNullHypothesis is disabled",
+  "Failed to connect to the bus",
+  "object_proxy.cc",
+  "Failed to call method: org.freedesktop.DBus",
+  "discardable_shared_memory_manager",
+  "bluez_dbus_manager",
+  "Floss manager service not available",
+  "xdg-settings",
+  "LaunchProcess: failed to execvp",
+];
+
 child.stderr.on("data", (chunk) => {
   stderr += chunk.toString();
-  process.stderr.write(chunk);
+  const filtered = chunk
+    .toString()
+    .split("\n")
+    .filter((line) => !STDOISE_LINES.some((noise) => line.includes(noise)))
+    .join("\n");
+  if (filtered.trim().length > 0) process.stderr.write(filtered);
 });
 
 child.on("close", (code) => {

@@ -30,7 +30,14 @@ jobs:
           cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --silent
+        shell: bash
+        run: |
+          set -o pipefail
+          # Filter known third-party/environment advisories (yarn 1 workspace
+          # quirk from recharts/es-toolkit manifests, node Buffer() deprecation
+          # from electron-builder's native rebuild). Failures still surface.
+          yarn install --frozen-lockfile 2>&1 | grep -vE "Workspaces can only be enabled|DeprecationWarning: Buffer|trace-deprecation" |
+            cat
 
       - name: TypeScript type check
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
@@ -131,7 +138,14 @@ jobs:
           java-version: "21"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile --silent
+        shell: bash
+        run: |
+          set -o pipefail
+          # Filter known third-party/environment advisories (yarn 1 workspace
+          # quirk from recharts/es-toolkit manifests, node Buffer() deprecation
+          # from electron-builder's native rebuild). Failures still surface.
+          yarn install --frozen-lockfile 2>&1 | grep -vE "Workspaces can only be enabled|DeprecationWarning: Buffer|trace-deprecation" |
+            cat
 
       - name: Build production bundle
         run: yarn build
