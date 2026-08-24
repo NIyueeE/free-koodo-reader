@@ -44,9 +44,11 @@ jobs:
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
 
       - name: ESLint (zero warnings allowed)
+        shell: bash
         run: yarn lint --max-warnings 0
 
       - name: Unit + smoke tests (i18n / platform / WebDAV live / IPC contract / preload / database service)
+        shell: bash
         run: CI=true yarn test --watchAll=false --passWithNoTests
 
       # Critical: the renderer bundle is not committed (build/ is git-ignored).
