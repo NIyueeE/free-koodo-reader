@@ -59,9 +59,16 @@ describe("WebDavService", () => {
     expect(mockedCreateClient).toHaveBeenCalledWith("https://example.com/dav", {
       username: "user",
       password: "pass",
-      httpAgent: undefined,
+      httpAgent: expect.anything(),
       httpsAgent: agent,
     });
+  });
+
+  it("uses default agents with an idle timeout so stalls fail instead of hanging", () => {
+    new WebDavService({ url: "https://example.com/dav" });
+    const options = mockedCreateClient.mock.calls[0][1];
+    expect((options.httpAgent as any).options.timeout).toBe(15000);
+    expect((options.httpsAgent as any).options.timeout).toBe(15000);
   });
 
   it("uploads a file to dir/category/file with overwrite and updates counters", async () => {

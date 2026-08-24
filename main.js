@@ -1514,13 +1514,20 @@ const createMainWin = () => {
     return voices;
   });
   ipcMain.handle("cloud-upload", async (event, config) => {
-    let syncUtil = await getSyncUtil(config, config.isUseCache);
-    let result = await syncUtil.uploadFile(
-      config.fileName,
-      config.fileName,
-      config.type
-    );
-    return result;
+    try {
+      let syncUtil = await getSyncUtil(config, config.isUseCache);
+      let result = await syncUtil.uploadFile(
+        config.fileName,
+        config.fileName,
+        config.type
+      );
+      return result;
+    } catch (error) {
+      // Never reject: the renderer's "test connection" flow awaits this and
+      // an unhandled rejection left the loading toast stuck forever.
+      console.error("cloud-upload failed:", error);
+      return false;
+    }
   });
 
   ipcMain.handle("cloud-download", async (event, config) => {

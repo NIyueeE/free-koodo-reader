@@ -1,6 +1,12 @@
 import { createClient, WebDAVClient } from "webdav";
-import type { Agent as HttpAgent } from "http";
-import type { Agent as HttpsAgent } from "https";
+import { Agent as HttpAgent } from "http";
+import { Agent as HttpsAgent } from "https";
+
+/**
+ * Idle-socket timeout for HTTP/HTTPS agents. Prevents sync operations (and
+ * the "test connection" flow) from hanging forever on a stalled server.
+ */
+const DEFAULT_AGENT_TIMEOUT_MS = 15000;
 
 /**
  * free-koodo-reader: minimal WebDAV sync implementation using the open-source
@@ -33,8 +39,13 @@ export default class WebDavService {
       dir: config.dir || "",
       username: config.username || "",
       password: config.password || "",
-      httpAgent: config.httpAgent || undefined,
-      httpsAgent: config.httpsAgent || undefined,
+      // Default agents bound to an idle timeout so stalled connections
+      // fail instead of hanging (overridable via custom agents).
+      httpAgent:
+        config.httpAgent || new HttpAgent({ timeout: DEFAULT_AGENT_TIMEOUT_MS }),
+      httpsAgent:
+        config.httpsAgent ||
+        new HttpsAgent({ timeout: DEFAULT_AGENT_TIMEOUT_MS }),
     };
     this.client = createClient(this.config.url, {
       username: this.config.username,

@@ -967,29 +967,18 @@ export const testConnection = async (driveName: string, driveConfig: any) => {
   toast.loading(i18n.t("Testing connection..."), {
     id: "testing-connection-id",
   });
-  if (isElectron) {
-    const ipcRenderer = window.electronAPI;
-    const fs = window.electronAPI.fs;
-    if (!fs.existsSync(getStorageLocation() + "/config")) {
-      fs.mkdirSync(getStorageLocation() + "/config", { recursive: true });
-    }
-    fs.writeFileSync(getStorageLocation() + "/config/test.txt", "Hello world!");
-    let result = await ipcRenderer.invoke("cloud-upload", {
-      ...driveConfig,
-      fileName: "test.txt",
-      service: driveName,
-      type: "config",
-      storagePath: getStorageLocation(),
-      isUseCache: false,
-    });
-    if (fs.existsSync(getStorageLocation() + "/config/test.txt")) {
-      fs.unlinkSync(getStorageLocation() + "/config/test.txt");
-    }
-    if (result) {
-      toast.success(i18n.t("Connection successful"), {
-        id: "testing-connection-id",
-      });
-      await ipcRenderer.invoke("cloud-delete", {
+  try {
+    if (isElectron) {
+      const ipcRenderer = window.electronAPI;
+      const fs = window.electronAPI.fs;
+      if (!fs.existsSync(getStorageLocation() + "/config")) {
+        fs.mkdirSync(getStorageLocation() + "/config", { recursive: true });
+      }
+      fs.writeFileSync(
+        getStorageLocation() + "/config/test.txt",
+        "Hello world!"
+      );
+      let result = await ipcRenderer.invoke("cloud-upload", {
         ...driveConfig,
         fileName: "test.txt",
         service: driveName,
@@ -997,50 +986,75 @@ export const testConnection = async (driveName: string, driveConfig: any) => {
         storagePath: getStorageLocation(),
         isUseCache: false,
       });
-    } else {
-      toast.error(i18n.t("Connection failed"), {
-        id: "testing-connection-id",
-      });
-      if (
-        driveName === "webdav" &&
-        driveConfig &&
-        driveConfig?.url &&
-        driveConfig?.url?.includes("jianguoyun.com")
-      ) {
-        toast.error(
-          i18n.t(
-            "Please make sure the KoodoReader folder is created in the root directory of your Jianguoyun account, not in the My Jianguoyun folder."
-          ),
-          {
-            id: "jianguoyun-folder-error",
-            duration: 4000,
-          }
-        );
+      if (fs.existsSync(getStorageLocation() + "/config/test.txt")) {
+        fs.unlinkSync(getStorageLocation() + "/config/test.txt");
       }
-    }
+      if (result) {
+        toast.success(i18n.t("Connection successful"), {
+          id: "testing-connection-id",
+        });
+        await ipcRenderer.invoke("cloud-delete", {
+          ...driveConfig,
+          fileName: "test.txt",
+          service: driveName,
+          type: "config",
+          storagePath: getStorageLocation(),
+          isUseCache: false,
+        });
+      } else {
+        toast.error(i18n.t("Connection failed"), {
+          id: "testing-connection-id",
+        });
+        if (
+          driveName === "webdav" &&
+          driveConfig &&
+          driveConfig?.url &&
+          driveConfig?.url?.includes("jianguoyun.com")
+        ) {
+          toast.error(
+            i18n.t(
+              "Please make sure the KoodoReader folder is created in the root directory of your Jianguoyun account, not in the My Jianguoyun folder."
+            ),
+            {
+              id: "jianguoyun-folder-error",
+              duration: 4000,
+            }
+          );
+        }
+      }
 
-    return result;
-  } else {
-    let syncUtil = new SyncUtil(driveName, driveConfig);
-    // 上传到云端
-    let result = await syncUtil.uploadFile(
-      "test.txt",
-      "config",
-      new Blob(["Hello world!"])
-    );
-    if (!result) {
-      toast.error(i18n.t("Connection failed"), {
-        id: "testing-connection-id",
-      });
-      return false;
+      return result;
     } else {
-      toast.success(i18n.t("Connection successful"), {
-        id: "testing-connection-id",
-      });
-    }
+      let syncUtil = new SyncUtil(driveName, driveConfig);
+      // 上传到云端
+      let result = await syncUtil.uploadFile(
+        "test.txt",
+        "config",
+        new Blob(["Hello world!"])
+      );
+      if (!result) {
+        toast.error(i18n.t("Connection failed"), {
+          id: "testing-connection-id",
+        });
+        return false;
+      } else {
+        toast.success(i18n.t("Connection successful"), {
+          id: "testing-connection-id",
+        });
+      }
 
-    // 删除云端文件
-    return await syncUtil.deleteFile("test.txt", "config");
+      // 删除云端文件
+      return await syncUtil.deleteFile("test.txt", "config");
+    }
+  } catch (error) {
+    // Never leave the "Testing connection..." toast hanging: the invoke or
+    // sync utility can reject (network / auth / invalid URL), which used to
+    // produce an unhandled rejection and a stuck loading toast.
+    console.error("Connection test failed:", error);
+    toast.error(i18n.t("Connection failed"), {
+      id: "testing-connection-id",
+    });
+    return false;
   }
 };
 export const testCORS = async (url: string) => {
