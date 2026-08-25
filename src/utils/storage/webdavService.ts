@@ -54,11 +54,32 @@ export default class WebDavService {
     return fileName ? `${base}/${fileName}` : base;
   }
 
+  private ensuredCollections = new Set<string>();
+
+  /** Auto-create the remote [dir]/<category> collection if it is missing. */
+  private async ensureCollection(category: string) {
+    const collectionPath = [this.config.dir, category]
+      .filter(Boolean)
+      .join("/");
+    if (!collectionPath || this.ensuredCollections.has(collectionPath)) return;
+    try {
+      await this.client.createDirectory(collectionPath, { recursive: true });
+    } catch (error: any) {
+      // 301/302/405/409 mean the collection (or a parent) already exists or
+      // is not allowed to be created - treat as idempotent success.
+      if (![301, 302, 405, 409].includes(error?.status)) throw error;
+    }
+    this.ensuredCollections.add(collectionPath);
+  }
+
   async uploadFile(fileName: string, category: string, data: Blob | ArrayBuffer | Buffer) {
     let content: any = data;
     if (typeof Blob !== "undefined" && data instanceof Blob) {
       content = Buffer.from(await data.arrayBuffer());
     }
+    // Strict servers (e.g. Seafile seafdav) return 409 for missing parent
+    // collections - create the remote category before uploading.
+    await this.ensureCollection(category);
     await this.client.putFileContents(this.getPath(category, fileName), content, {
       overwrite: true,
     });
@@ -81,7 +102,9 @@ export default class WebDavService {
 
   async createDirectory(category: string): Promise<boolean> {
     try {
-      await this.client.createDirectory(this.getPath(category));
+      await this.client.createDirectory(this.getPath(category), {
+        recursive: true,
+      });
     } catch (error: any) {
       // 405 / 301 responses mean the directory already exists.
       if ([301, 302, 405, 409].includes(error?.status)) {

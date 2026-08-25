@@ -132,12 +132,18 @@ describe("testConnection (Electron branch)", () => {
     expect(mockToast.success).not.toHaveBeenCalled();
   });
 
-  it("shows failure when the upload returns a falsy result", async () => {
+  it("shows failure WITH the recorded reason when the upload returns falsy", async () => {
+    // cloud-upload fails (returns false), then the reason is fetched from the
+    // main process via cloud-last-error.
     mockInvoke.mockResolvedValueOnce(false);
+    mockInvoke.mockResolvedValueOnce("Server returned HTTP 409 (a parent folder is missing on the server)");
     const result = await testConnection("webdav", driveConfig);
     expect(result).toBe(false);
+    expect(mockInvoke).toHaveBeenCalledWith("cloud-last-error");
     expect(mockToast.error).toHaveBeenCalledWith(
-      expect.stringContaining("Connection failed"),
+      expect.stringContaining(
+        "Server returned HTTP 409 (a parent folder is missing on the server)"
+      ),
       { id: "testing-connection-id" }
     );
   });

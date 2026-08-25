@@ -4,6 +4,7 @@ const INVOKE_CHANNELS = new Set([
   "discord-rpc-update", "discord-rpc-clear",
   "open-book", "generate-tts", "get-tts-voices", "cloud-upload", "cloud-download", "cloud-progress",
   "picker-download", "picker-progress", "cloud-reset", "cloud-stats", "cloud-delete",
+  "cloud-last-error",
   "cloud-list", "picker-list", "cloud-exist", "cloud-close", "clear-tts", "select-path",
   "select-file", "encrypt-data", "decrypt-data", "check-cloud-url", "get-proxy-config",
   "set-proxy-config", "test-proxy-connection", "get-mac",

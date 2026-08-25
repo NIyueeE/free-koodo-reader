@@ -31,6 +31,7 @@ const nodeCrypto = require("crypto");
 const webdav = require("webdav");
 const yazl = require("yazl");
 const { getVoicePlugin } = require("./src/utils/plugins/main/registry");
+const webdavCloud = require("./src/utils/storage/webdavCloud");
 const configDir = app.getPath("userData");
 const dirPath = path.join(configDir, "uploads");
 const assetProtocolFiles = new Map();
@@ -736,90 +737,29 @@ const getDBConnection = (dbName, storagePath, sqlStatement) => {
   return dbConnection[dbName];
 };
 const createWebDavSyncUtil = (config) => {
-  if (!config || !config.url || !/^https:\/\//i.test(config.url)) {
-    throw new Error("WebDAV requires HTTPS");
+  return webdavCloud.createWebDavSyncUtil(config);
+};
+// Resolve the local path for a cloud operation. SQLite databases live at the
+// storage root (also honoring the temp- prefix used by cloud downloads), while
+// books/covers/config JSON/backups live under <storage>/<type>/.
+const resolveLocalPath = (config) => {
+  const localStorage = config.storagePath || configDir;
+  const fileName = (config.isTemp ? "temp-" : "") + config.fileName;
+  if (/\.db$/i.test(fileName)) {
+    return path.join(localStorage, fileName);
   }
-  // Bound the idle socket so a stalled server fails within 15s instead of
-  // hanging the "test connection" / sync flow indefinitely.
-  const httpAgent = new (require("http").Agent)({ timeout: 15000 });
-  const httpsAgent = new (require("https").Agent)({ timeout: 15000 });
-  const client = webdav.createClient(config.url, {
-    username: config.username || "",
-    password: config.password || "",
-    httpAgent,
-    httpsAgent,
-  });
-  const dir = config.dir || "";
-  const pathFor = (category, fileName) =>
-    [dir, category, fileName].filter(Boolean).join("/");
-  let downloadedSize = 0;
-  let completed = 0;
-  return {
-    async uploadFile(fileName, category, data) {
-      let content = data;
-      if (Buffer.isBuffer(data)) content = data;
-      else if (data && typeof data.arrayBuffer === "function") {
-        content = Buffer.from(await data.arrayBuffer());
-      }
-      await client.putFileContents(pathFor(category, fileName), content, {
-        overwrite: true,
-      });
-      completed += 1;
-      return { code: 200 };
-    },
-    async downloadFile(fileName, category) {
-      const buf = await client.getFileContents(pathFor(category, fileName), {
-        format: "arraybuffer",
-      });
-      downloadedSize += buf.byteLength || 0;
-      return buf;
-    },
-    async deleteFile(fileName, category) {
-      await client.deleteFile(pathFor(category, fileName));
-      return true;
-    },
-    async listFiles(category) {
-      const items = await client.getDirectoryContents(pathFor(category));
-      return (items || [])
-        .filter((item) => item.type === "file")
-        .map((item) => item.basename || item.filename.split("/").pop() || "");
-    },
-    async isExist(fileName, category) {
-      return client.exists(pathFor(category, fileName));
-    },
-    async listFileInfos(currentPath) {
-      const items = await client.getDirectoryContents(
-        [dir, currentPath].filter(Boolean).join("/")
-      );
-      return (items || []).map((item) => ({
-        name: item.basename || item.filename.split("/").pop() || "",
-        type: item.type === "directory" ? "folder" : "file",
-        size: item.size || 0,
-        path: currentPath,
-      }));
-    },
-    remote: {
-      async downloadFile(sourcePath) {
-        return client.getFileContents(
-          [dir, sourcePath.replace(/^\//, "")].filter(Boolean).join("/"),
-          { format: "arraybuffer" }
-        );
-      },
-    },
-    getDownloadedSize() {
-      return downloadedSize;
-    },
-    resetCounters() {
-      downloadedSize = 0;
-      completed = 0;
-    },
-    getStats() {
-      return { total: completed, completed, downloadedSize };
-    },
-    clearQueue() {},
-  };
+  return path.join(localStorage, config.type, fileName);
 };
 
+const readUploadContent = (config) => {
+  const localPath = resolveLocalPath(config);
+  if (!fs.existsSync(localPath)) {
+    return Promise.reject(
+      new Error("Local file not found for upload: " + localPath)
+    );
+  }
+  return fs.readFileSync(localPath);
+};
 const getSyncUtil = async (config, isUseCache = true) => {
   if (config.service === "webdav") {
     if (!isUseCache || !syncUtilCache.webdav) {
@@ -1519,13 +1459,25 @@ const createMainWin = () => {
     }
     return voices;
   });
+  let lastCloudError = "";
+  ipcMain.handle("cloud-last-error", async () => {
+    return lastCloudError;
+  });
   ipcMain.handle("cloud-upload", async (event, config) => {
     try {
-        let syncUtil = await getSyncUtil(config, config.isUseCache);        let result = await syncUtil.uploadFile(          config.fileName,          config.fileName,          config.type        );        return result;
+      let syncUtil = await getSyncUtil(config, config.isUseCache);
+      let result = await syncUtil.uploadFile(
+        config.fileName,
+        config.type,
+        await readUploadContent(config)
+      );
+      return result;
     } catch (error) {
       // Never reject: the renderer's "test connection" flow awaits this and
-      // an unhandled rejection left the loading toast stuck forever.
+      // an unhandled rejection left the loading toast stuck forever. The
+      // reason is exposed via the cloud-last-error channel.
       console.error("cloud-upload failed:", error);
+      lastCloudError = webdavCloud.describeError(error);
       return false;
     }
   });
@@ -1533,18 +1485,21 @@ const createMainWin = () => {
   ipcMain.handle("cloud-download", async (event, config) => {
     try {
       let syncUtil = await getSyncUtil(config);
-      let result = await syncUtil.downloadFile(
+      let buffer = await syncUtil.downloadFile(
         config.fileName,
-        (config.isTemp ? "temp-" : "") + config.fileName,
         config.type
       );
-      return result;
+      const targetPath = resolveLocalPath(config);
+      fsExtra.ensureDirSync(path.dirname(targetPath));
+      fs.writeFileSync(targetPath, Buffer.from(buffer));
+      return true;
     } catch (error) {
       console.error("cloud-download failed:", error);
+      lastCloudError = webdavCloud.describeError(error);
       return false;
     }
-
   });
+
   ipcMain.handle("cloud-progress", async (event, config) => {
     try {
       let syncUtil = await getSyncUtil(config);

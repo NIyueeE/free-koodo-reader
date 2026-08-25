@@ -1002,9 +1002,22 @@ export const testConnection = async (driveName: string, driveConfig: any) => {
           isUseCache: false,
         });
       } else {
-        toast.error(i18n.t("Connection failed"), {
-          id: "testing-connection-id",
-        });
+        // The main process records the failure reason (falsy result, never a
+        // rejection since v3.0.3) - surface it so the user knows what to fix.
+        let syncDetail = "";
+        try {
+          syncDetail =
+            (await ipcRenderer.invoke("cloud-last-error")) || "";
+        } catch (error) {
+          /* older main process without the channel - ignore */
+        }
+        toast.error(
+          i18n.t("Connection failed") +
+            (syncDetail ? ": " + syncDetail : ""),
+          {
+            id: "testing-connection-id",
+          }
+        );
         if (
           driveName === "webdav" &&
           driveConfig &&

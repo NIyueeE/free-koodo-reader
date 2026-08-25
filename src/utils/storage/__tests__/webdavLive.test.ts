@@ -98,5 +98,16 @@ describe("WebDAV live smoke (real HTTPS server)", () => {
     expect(await service.isExist("book.epub", "library")).toBe(false);
     expect(await service.listFiles("library")).toEqual([]);
   });
+
+  it("uploads into a brand-new category without pre-creating it (auto-mkdir)", async () => {
+    // Regression: strict servers (e.g. Seafile seafdav) return 409 when the
+    // parent collection is missing; the service must create it first.
+    const payload = Buffer.from("auto-created-collection");
+    await service.uploadFile("book.epub", "never-created", payload);
+    expect(await service.isExist("book.epub", "never-created")).toBe(true);
+    const downloaded = await service.downloadFile("book.epub", "never-created");
+    expect(Buffer.from(downloaded).toString()).toBe(payload.toString());
+    await service.deleteFile("book.epub", "never-created");
+  });
 });
 

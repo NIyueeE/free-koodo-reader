@@ -1,7 +1,7 @@
 {
   "name": "free-koodo-reader",
   "main": "main.js",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
     "name": "Free Koodo Reader",

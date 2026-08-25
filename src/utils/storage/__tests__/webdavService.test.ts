@@ -122,7 +122,9 @@ describe("WebDavService", () => {
     mockClient.createDirectory.mockResolvedValue(undefined);
     const service = new WebDavService({ url: "https://example.com/dav" });
     expect(await service.createDirectory("library")).toBe(true);
-    expect(mockClient.createDirectory).toHaveBeenCalledWith("library");
+    expect(mockClient.createDirectory).toHaveBeenCalledWith("library", {
+      recursive: true,
+    });
 
     const conflict = new Error("already exists");
     (conflict as any).status = 405;
