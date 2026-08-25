@@ -7,6 +7,7 @@ module.exports = {
   ignorePatterns: [
     "src/assets/lib/**",
     "src/utils/plugins/main/**",
+    "src/utils/storage/webdavCloud.js",
     "build/**",
     "dist/**",
     "android/**",
