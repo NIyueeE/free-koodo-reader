@@ -61,12 +61,12 @@ describe("webdavCloud (Electron main WebDAV layer)", () => {
     const result = await util.uploadFile("test.txt", "config", Buffer.from("hi"));
     expect(mockClient.createDirectory).toHaveBeenCalledWith(
       "WebDAV/Free-Koodo-Reader/config",
-      { recursive: true }
+      expect.objectContaining({ recursive: true })
     );
     expect(mockClient.putFileContents).toHaveBeenCalledWith(
       "WebDAV/Free-Koodo-Reader/config/test.txt",
       Buffer.from("hi"),
-      { overwrite: true }
+      expect.objectContaining({ overwrite: true })
     );
     expect(result).toEqual({ code: 200 });
     expect(util.getStats().completed).toBe(1);
@@ -99,7 +99,7 @@ describe("webdavCloud (Electron main WebDAV layer)", () => {
     expect(mockClient.putFileContents).toHaveBeenCalledWith(
       "WebDAV/Free-Koodo-Reader/config/test.txt",
       Buffer.from("Hello world!"),
-      { overwrite: true }
+      expect.objectContaining({ overwrite: true })
     );
   });
 
@@ -137,5 +137,35 @@ describe("webdavCloud (Electron main WebDAV layer)", () => {
       "HTTPS"
     );
     expect(webdavCloud.describeError(new Error("raw detail"))).toBe("raw detail");
+  });
+
+  it("bounds every request with an abort deadline (stalled servers must not hang)", async () => {
+    mockClient.createDirectory.mockResolvedValue(undefined);
+    mockClient.putFileContents.mockResolvedValue(undefined);
+    mockClient.getDirectoryContents.mockResolvedValue([]);
+    const util = webdavCloud.createWebDavSyncUtil(baseConfig());
+    await util.uploadFile("a.txt", "config", Buffer.from("a"));
+    await util.listFiles("config");
+    const putOptions = mockClient.putFileContents.mock.calls[0][2];
+    const listOptions = mockClient.getDirectoryContents.mock.calls[0][1];
+    // jsdom (jest) lacks AbortSignal.timeout - the module falls back to a
+    // manual controller; either way a signal must be present.
+    expect(putOptions && putOptions.signal).toBeTruthy();
+    expect(listOptions && listOptions.signal).toBeTruthy();
+  });
+
+  it("trims surrounding whitespace from the server URL", () => {
+    expect(() =>
+      webdavCloud.createWebDavSyncUtil(baseConfig({ url: "  https://dav.example.com  " }))
+    ).not.toThrow();
+    expect(() =>
+      webdavCloud.createWebDavSyncUtil(baseConfig({ url: "https://dav.example.com " }))
+    ).not.toThrow();
+  });
+
+  it("describes abort deadlines as timeouts for the user", () => {
+    const abort = new Error("The operation was aborted") as any;
+    abort.name = "AbortError";
+    expect(webdavCloud.describeError(abort)).toContain("timed out");
   });
 });

@@ -1,7 +1,7 @@
 {
   "name": "free-koodo-reader",
   "main": "main.js",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "description": "Free Koodo Reader - a privacy-friendly cross-platform ebook reader",
   "author": {
     "name": "Free Koodo Reader",
@@ -153,6 +153,7 @@
       "package.json",
       "src/assets/lib/kookit-extra.min.mjs",
       "src/utils/plugins/main/**/*.js",
+      "src/utils/storage/webdavCloud.js",
       "main.js",
       "preload.js"
     ],

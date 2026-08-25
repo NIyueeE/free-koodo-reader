@@ -74,7 +74,7 @@ describe("WebDavService", () => {
     expect(mockClient.putFileContents).toHaveBeenCalledWith(
       "books/library/book.epub",
       Buffer.from("DATA"),
-      { overwrite: true }
+      expect.objectContaining({ overwrite: true })
     );
     expect(result).toEqual({ code: 200 });
     expect(service.getStats().completed).toBe(1);
@@ -88,7 +88,7 @@ describe("WebDavService", () => {
     const data = await service.downloadFile("book.epub", "library");
     expect(mockClient.getFileContents).toHaveBeenCalledWith(
       "library/book.epub",
-      { format: "binary" }
+      expect.objectContaining({ format: "binary" })
     );
     expect(data).toBe(payload);
     expect(service.getDownloadedSize()).toBe(42);
@@ -114,17 +114,24 @@ describe("WebDavService", () => {
     });
     expect(await service.isExist("note.md", "notes")).toBe(true);
     expect(await service.deleteFile("note.md", "notes")).toBe(true);
-    expect(mockClient.exists).toHaveBeenCalledWith("sync/notes/note.md");
-    expect(mockClient.deleteFile).toHaveBeenCalledWith("sync/notes/note.md");
+    expect(mockClient.exists).toHaveBeenCalledWith(
+      "sync/notes/note.md",
+      expect.objectContaining({ signal: expect.anything() })
+    );
+    expect(mockClient.deleteFile).toHaveBeenCalledWith(
+      "sync/notes/note.md",
+      expect.objectContaining({ signal: expect.anything() })
+    );
   });
 
   it("creates category directories (MKCOL) and tolerates existing ones", async () => {
     mockClient.createDirectory.mockResolvedValue(undefined);
     const service = new WebDavService({ url: "https://example.com/dav" });
     expect(await service.createDirectory("library")).toBe(true);
-    expect(mockClient.createDirectory).toHaveBeenCalledWith("library", {
-      recursive: true,
-    });
+    expect(mockClient.createDirectory).toHaveBeenCalledWith(
+      "library",
+      expect.objectContaining({ recursive: true })
+    );
 
     const conflict = new Error("already exists");
     (conflict as any).status = 405;
@@ -147,7 +154,10 @@ describe("WebDavService", () => {
       dir: "root",
     });
     const info = await service.listFileInfos("now");
-    expect(mockClient.getDirectoryContents).toHaveBeenCalledWith("root/now");
+    expect(mockClient.getDirectoryContents).toHaveBeenCalledWith(
+      "root/now",
+      expect.objectContaining({ signal: expect.anything() })
+    );
     expect(info).toEqual([
       { name: "dav-dir", type: "folder", size: 0, path: "now" },
       { name: "file.txt", type: "file", size: 100, path: "now" },
@@ -162,9 +172,10 @@ describe("WebDavService", () => {
       dir: "remote",
     });
     const data = await service.remote.downloadFile("/backup.zip");
-    expect(mockClient.getFileContents).toHaveBeenCalledWith("remote/backup.zip", {
-      format: "binary",
-    });
+    expect(mockClient.getFileContents).toHaveBeenCalledWith(
+      "remote/backup.zip",
+      expect.objectContaining({ format: "binary" })
+    );
     expect(data).toBe(payload);
   });
 });

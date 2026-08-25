@@ -739,6 +739,27 @@ const getDBConnection = (dbName, storagePath, sqlStatement) => {
 const createWebDavSyncUtil = (config) => {
   return webdavCloud.createWebDavSyncUtil(config);
 };
+// The webdav slots are shared across configs, so they are keyed by an account
+// fingerprint: a download right after switching WebDAV accounts must never
+// reuse the previous account's client, while progress counters still
+// accumulate within one unchanged account. The fingerprint is never logged.
+const webdavConfigFingerprint = (config) =>
+  JSON.stringify([
+    config.url,
+    config.username || "",
+    config.password || "",
+    config.dir || "",
+  ]);
+// IPC path safety: fileName/type come from the renderer and are joined into
+// local filesystem paths - reject separators, traversal segments and control
+// characters before any fs operation.
+const isSafeCloudPathSegment = (value) =>
+  typeof value === "string" &&
+  value.length > 0 &&
+  value.length <= 255 &&
+  value !== "." &&
+  value !== ".." &&
+  !/[\\/\u0000-\u001f]/.test(value);
 // Resolve the local path for a cloud operation. SQLite databases live at the
 // storage root (also honoring the temp- prefix used by cloud downloads), while
 // books/covers/config JSON/backups live under <storage>/<type>/.
@@ -762,10 +783,18 @@ const readUploadContent = (config) => {
 };
 const getSyncUtil = async (config, isUseCache = true) => {
   if (config.service === "webdav") {
-    if (!isUseCache || !syncUtilCache.webdav) {
-      syncUtilCache.webdav = createWebDavSyncUtil(config);
+    const fingerprint = webdavConfigFingerprint(config);
+    if (
+      !isUseCache ||
+      !syncUtilCache.webdav ||
+      syncUtilCache.webdav.fingerprint !== fingerprint
+    ) {
+      syncUtilCache.webdav = {
+        util: createWebDavSyncUtil(config),
+        fingerprint,
+      };
     }
-    return syncUtilCache.webdav;
+    return syncUtilCache.webdav.util;
   }
   if (!isUseCache || !syncUtilCache[config.service]) {
     const { SyncUtil } = await import("./src/assets/lib/kookit-extra.min.mjs");
@@ -774,19 +803,29 @@ const getSyncUtil = async (config, isUseCache = true) => {
   return syncUtilCache[config.service];
 };
 const removeSyncUtil = (config) => {
-  if (syncUtilCache[config.service]) {
-    if (typeof syncUtilCache[config.service].clearQueue === "function") {
-      syncUtilCache[config.service].clearQueue();
+  const cached = syncUtilCache[config.service];
+  if (cached) {
+    const util = cached && cached.util ? cached.util : cached;
+    if (typeof util.clearQueue === "function") {
+      util.clearQueue();
     }
     delete syncUtilCache[config.service];
   }
 };
 const getPickerUtil = async (config, isUseCache = true) => {
   if (config.service === "webdav") {
-    if (!isUseCache || !pickerUtilCache.webdav) {
-      pickerUtilCache.webdav = createWebDavSyncUtil(config);
+    const fingerprint = webdavConfigFingerprint(config);
+    if (
+      !isUseCache ||
+      !pickerUtilCache.webdav ||
+      pickerUtilCache.webdav.fingerprint !== fingerprint
+    ) {
+      pickerUtilCache.webdav = {
+        util: createWebDavSyncUtil(config),
+        fingerprint,
+      };
     }
-    return pickerUtilCache.webdav;
+    return pickerUtilCache.webdav.util;
   }
   if (!isUseCache || !pickerUtilCache[config.service]) {
     const { SyncUtil } = await import("./src/assets/lib/kookit-extra.min.mjs");
@@ -795,9 +834,7 @@ const getPickerUtil = async (config, isUseCache = true) => {
   return pickerUtilCache[config.service];
 };
 const removePickerUtil = (config) => {
-  if (pickerUtilCache[config.service]) {
-    pickerUtilCache[config.service] = null;
-  }
+  pickerUtilCache[config.service] = null;
 };
 const getNativeThemeSource = (appSkin) => {
   if (appSkin === "night") {
@@ -1465,6 +1502,12 @@ const createMainWin = () => {
   });
   ipcMain.handle("cloud-upload", async (event, config) => {
     try {
+      if (
+        !isSafeCloudPathSegment(config.fileName) ||
+        !isSafeCloudPathSegment(config.type)
+      ) {
+        throw new Error("Invalid cloud upload path");
+      }
       let syncUtil = await getSyncUtil(config, config.isUseCache);
       let result = await syncUtil.uploadFile(
         config.fileName,
@@ -1484,6 +1527,12 @@ const createMainWin = () => {
 
   ipcMain.handle("cloud-download", async (event, config) => {
     try {
+      if (
+        !isSafeCloudPathSegment(config.fileName) ||
+        !isSafeCloudPathSegment(config.type)
+      ) {
+        throw new Error("Invalid cloud download path");
+      }
       let syncUtil = await getSyncUtil(config);
       let buffer = await syncUtil.downloadFile(
         config.fileName,
