@@ -6,20 +6,17 @@ on:
     tags:
       - "v*"
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  release:
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
-    timeout-minutes: 120
-
-    env:
-      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-22.04, windows-2022, ubuntu-24.04-arm]
-
+  # Verify once on Linux (typecheck, lint, tests, renderer build). The
+  # per-OS packaging jobs below consume the built renderer artifact, so the
+  # slow Windows/ARM jobs no longer duplicate the whole verification stage.
+  verify:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v6
@@ -65,9 +62,68 @@ jobs:
           fi
           echo "Renderer bundle present: $(du -sh build | cut -f1)"
 
-      - name: Install Snapcraft
-        uses: samuelmeuli/action-snapcraft@v3
+      # Static guard: every module main.js/preload.js require must be matched
+      # by a build.files pattern, or the packaged app crashes on launch with
+      # "Cannot find module" (v3.0.4 shipped like this for webdavCloud.js).
+      - name: Verify build.files covers main-process requires
+        run: node scripts/verify-package-files.js
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-build
+          path: build
+          if-no-files-found: error
+
+  release:
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    timeout-minutes: 120
+
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2022, ubuntu-24.04-arm]
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v6
+
+      - name: Install Node.js, NPM and Yarn
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "yarn"
+
+      # The electron zips (~106 MB per job) are re-downloaded on every run;
+      # cache them so re-tags and the packaged smoke test are faster.
+      - name: Cache Electron binaries
         if: startsWith(matrix.os, 'ubuntu-22.04')
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: electron-${{ runner.os }}-
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -o pipefail
+          # Filter known third-party/environment advisories (yarn 1 workspace
+          # quirk from recharts/es-toolkit manifests, node Buffer() deprecation
+          # from electron-builder's native rebuild). Failures still surface.
+          yarn install --frozen-lockfile 2>&1 | grep -vE "Workspaces can only be enabled|DeprecationWarning: Buffer|trace-deprecation" |
+            cat
+
+      - name: Download web build artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: web-build
+          path: build
 
       - name: Install Gcc
         if: startsWith(matrix.os, 'ubuntu-22.04')
@@ -113,6 +169,30 @@ jobs:
             }
           ]' package.json > package.json.tmp && mv package.json.tmp package.json
 
+      # End-to-end guard: launch the exact unpacked artifact layout that gets
+      # published and verify the renderer mounts. Catches packaging
+      # regressions (missing asar files, broken natives) that source-tree
+      # smoke tests cannot see.
+      - name: Install Xvfb (packaged smoke test)
+        if: startsWith(matrix.os, 'ubuntu-22.04')
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+
+      - name: Package app unpacked (for packaged smoke test)
+        if: startsWith(matrix.os, 'ubuntu-22.04')
+        run: npx electron-builder --dir
+
+      - name: Smoke test packaged app (prevents shipping unlaunchable builds)
+        if: startsWith(matrix.os, 'ubuntu-22.04')
+        run: xvfb-run -a --server-args="-screen 0 1366x768x24" node scripts/packaged-smoke-test.js
+
+      - name: Upload packaged smoke screenshot
+        if: always() && startsWith(matrix.os, 'ubuntu-22.04')
+        uses: actions/upload-artifact@v7
+        with:
+          name: packaged-smoke-screenshot
+          path: build/packaged-smoke-screenshot.png
+          if-no-files-found: ignore
+
       - name: Build/release Electron app
         shell: bash
         env:
@@ -146,6 +226,15 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Install dependencies
         shell: bash

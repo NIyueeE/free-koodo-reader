@@ -43,6 +43,9 @@ jobs:
       - name: Unit tests
         run: CI=true yarn test --watchAll=false --passWithNoTests
 
+      - name: Verify build.files covers main-process requires (prevents "Cannot find module" releases)
+        run: node scripts/verify-package-files.js
+
       - name: Build production bundle
         run: yarn build
 
@@ -110,6 +113,22 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: node-modules-${{ runner.os }}-
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
 
       - name: Install dependencies
         shell: bash
@@ -183,6 +202,13 @@ jobs:
         with:
           name: web-build
           path: build
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: node-modules-${{ runner.os }}-
 
       - name: Install Xvfb
         run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb

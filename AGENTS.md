@@ -47,10 +47,10 @@ Free Koodo Reader 是一个本地优先、无官方云服务的跨平台电子�
 
 ## 默认分支与 CI
 
-- 默认分支：`main`；在 `main` 上直接修改并推送，CI 自动运行：类型检查 → ESLint（零警告）→ 单元与冒烟测试 → 生产构建 → GUI 冒烟测试（Xvfb 下启动真实 Electron 验证渲染器挂载）→ Android debug APK（含渲染器存在性检查、包名一致性检查）。带并发取消与作业超时。
-- **测试套件（`yarn test`，38 个用例）**：i18n 完整性（en↔zh-CN key 一致）、平台检测、WebDAV 单元 + 真实 HTTPS 服务器冒烟、**IPC 契约**（preload 白名单 ↔ main.js 处理器双向校验）、**preload 安全边界**（通道白名单/fs/path/crypto/错误传播）、**数据库服务**（isElectron=false 浏览器模式 CRUD）。新增关键逻辑时同步补充测试。
-- **注意**：`build/`（渲染器产物）被 git 忽略，任何打包（`yarn release`、release workflow）都必须先执行 `yarn build`，否则会发布白屏版本。CI 与 release workflow 已内置缺失检查与冒烟测试。
-- **WebDAV 冒烟测试**：`yarn test` 中的 `webdavLive.test.ts` 会启动真实 HTTPS WebDAV 服务器（自签名测试证书 fixture），用生产 `WebDavService` 跑完整的 建目录→上传→存在性→列表→下载比对→删除，并校验 HTTPS-only 策略。修改 `src/utils/storage/webdavService.ts` 后必须运行 `yarn test`。
+- 默认分支：`main`；在 `main` 上直接修改并推送，CI 自动运行：类型检查 → ESLint（零警告）→ 单元与冒烟测试 → 打包文件守卫（`verify-package-files`：main.js/preload.js 的 require 图必须被 `build.files` 覆盖）→ 生产构建 → GUI 冒烟测试（Xvfb 下启动真实 Electron 验证渲染器挂载）→ Android debug APK（含渲染器存在性检查、包名一致性检查）。带并发取消与作业超时。
+- **测试套件（`yarn test`，56 个用例）**：i18n 完整性（en↔zh-CN key 一致）、平台检测、WebDAV 单元 + 真实 HTTPS 服务器冒烟、**IPC 契约**（preload 白名单 ↔ main.js 处理器双向校验）、**preload 安全边界**（通道白名单/fs/path/crypto/错误传播）、**数据库服务**（isElectron=false 浏览器模式 CRUD）、**打包守卫**（`build.files` 覆盖 main 进程 require 图，防止 "Cannot find module" 启动崩溃，v3.0.4 教训）。新增关键逻辑时同步补充测试。
+- **注意**：`build/`（渲染器产物）被 git 忽略，任何打包（`yarn release`、release workflow）都必须先执行 `yarn build`，否则会发布白屏版本。CI 与 release workflow 已内置缺失检查与冒烟测试；release workflow 另有**打包产物冒烟**（ubuntu 上 `electron-builder --dir` 后在 Xvfb 启动打包产物并断言 `KOODO_SMOKE_RESULT: PASS`，通过后才执行 `--publish always`）。
+- **WebDAV 冒烟测试**：`yarn test` 中的 `webdavLive.test.ts` 会启动真实 HTTPS WebDAV 服务器（自签名测试证书 fixture），用生产 `WebDavService`（渲染端）跑完整的 建目录→上传→存在性→列表→下载比对→删除，并校验 HTTPS-only 策略；`webdavCloudLive.test.ts` 对主进程层 `webdavCloud.js`（打包后 cloud-upload/download 的实际代码路径）做同样的真服务器往返，并验证"服务器连上但不响应"时请求会被绝对超时中止而不是永久挂起。修改 `src/utils/storage/webdavService.ts` 或 `webdavCloud.js` 后必须运行 `yarn test`。
 
 ## 关键 IPC 通道
 
