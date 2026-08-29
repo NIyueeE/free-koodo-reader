@@ -33,3 +33,27 @@ export const isCompactScreen = (): boolean =>
 /** Whether the device should get the mobile-oriented reader layout. */
 export const isMobileDevice = (): boolean =>
   isCapacitor() || isNarrowScreen();
+
+/**
+ * Bridge shim for the reading engine's mobile mode.
+ *
+ * When a rendition is created with `isMobile: "yes"` the engine routes
+ * console output and in-book events (link clicks, pinch zoom, scroll bottom
+ * ...) through `window.ReactNativeWebView.postMessage`. That object only
+ * exists inside the upstream React Native wrapper; without this shim the
+ * first log or gesture inside a mobile-layout book throws
+ * "Cannot read properties of undefined (reading 'postMessage')".
+ *
+ * Idempotent; leaves an existing bridge untouched. Messages are echoed to
+ * the original console so they stay visible during development.
+ */
+export const installMobileBridge = (): void => {
+  if (typeof window === "undefined") return;
+  if ((window as any).ReactNativeWebView) return;
+  const nativeLog = console.log?.bind(console) ?? (() => {});
+  (window as any).ReactNativeWebView = {
+    postMessage: (message: string) => {
+      nativeLog("[book-engine]", message);
+    },
+  };
+};

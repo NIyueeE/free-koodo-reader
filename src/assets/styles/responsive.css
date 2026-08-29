@@ -1,54 +1,84 @@
 /* =============================================================================
-   Narrow-screen (Android / phones) adaptation.
+   Narrow-screen (Android phones / small windows) adaptation.
 
-   On narrow screens the JS platform layer auto-collapses the sidebar into an
-   icon strip; these rules keep the remaining header, content area and dialogs
-   inside the viewport width. Defaults stay untouched on desktop.
+   On narrow screens the JS platform layer auto-collapses the sidebar into a
+   70px icon strip (isNarrowScreen(), see src/platform/index.ts). The rules in
+   this file re-flow the rest of the UI so nothing is copied verbatim from the
+   desktop layout: header icons stay identical to desktop, lists become
+   single/two-column fluid grids, dialogs fit the viewport and the reader
+   panels span the screen instead of keeping their fixed desktop widths.
+   Defaults stay untouched on desktop (>= 769px).
    ============================================================================= */
 
 @media screen and (max-width: 768px) {
-  /* ---- header ----
-     The header block flows below the full-height sidebar, so its children are
-     absolutely positioned against the fixed #root. Keep `.header`
-     unpositioned and position the children explicitly. */
+  /* ===========================================================================
+     1. Manager header — same icon set as desktop (sort / setting / sync).
+        The header block flows below the full-height sidebar, so its children
+        are absolutely positioned against #root; position them explicitly.
+     ======================================================================== */
   .header {
     margin-left: 70px !important; /* collapsed sidebar icon strip */
+    height: 64px !important;
   }
   .header-search-container {
     position: absolute !important;
-    top: 23px !important;
-    left: 78px !important;
-    right: auto !important;
+    top: 12px !important;
+    left: 80px !important;
+    right: 150px !important;
+    width: auto !important;
+    min-width: 120px !important;
     margin-left: 0 !important;
-    width: calc(100vw - 190px) !important;
-    min-width: 140px !important;
   }
   .setting-icon-parrent {
     position: absolute !important;
-    top: 18px !important;
+    top: 7px !important;
     left: auto !important;
-    right: 8px !important;
+    right: 2px !important;
     margin-left: 0 !important;
+    display: flex;
+    align-items: center;
   }
-  /* On phones keep only the settings gear in the header; sort and sync are
-     available in settings/context menus. */
-  .setting-icon-container:has(.icon-sort-desc),
-  .setting-icon-container:has(.icon-sync) {
-    display: none !important;
+  /* Neutralise per-icon inline offsets from the desktop layout. */
+  .setting-icon-parrent .setting-icon-container {
+    top: auto !important;
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    line-height: 44px !important;
+    float: none !important;
+    flex-shrink: 0;
   }
-  .header-report-container {
-    display: none !important;
+  .setting-icon-parrent .setting-icon {
+    font-size: 21px !important;
+    float: none !important;
   }
-  .only-local-container {
-    display: none !important;
+  .header-sort-icon {
+    font-size: 21px !important;
+    margin-top: 0 !important;
   }
+  .header-report-container,
+  .only-local-container,
   .download-demo-book {
     display: none !important;
   }
 
-  /* ---- content area (offset by collapsed sidebar) ---- */
+  /* Collapsed sidebar (icon strip) */
+  .sidebar {
+    width: 70px;
+  }
+  .side-menu-about {
+    left: 0;
+    right: 0;
+  }
+
+  /* ===========================================================================
+     2. Content lists — fluid widths instead of the desktop fixed ones.
+     ======================================================================== */
   .book-list-container-parent,
-  .book-list-header {
+  .book-list-header,
+  .card-list-container-parent,
+  .note-list-container-parent {
     left: 70px !important;
     width: calc(100% - 70px) !important;
   }
@@ -56,20 +86,174 @@
     left: 70px !important;
     width: calc(100vw - 70px) !important;
   }
-  .book-list-header-right {
-    gap: 4px !important;
-  }
-  .book-list-total-page {
-    font-size: 13px !important;
-  }
-  .lang-setting-dropdown {
-    width: 56px !important;
-  }
-  .book-card-scale-slider {
-    max-width: 70px !important;
+  .empty-page-info-sub {
+    width: calc(100vw - 130px) !important;
+    font-size: 18px !important;
   }
 
-  /* ---- dialogs / popups ---- */
+  /* ---- bottom bar of the book list: drop the desktop-only card-size
+         slider and keep one tidy row ------------------------------------- */
+  .book-list-header {
+    padding: 0 8px;
+    box-sizing: border-box;
+  }
+  .book-list-header-right {
+    gap: 4px;
+  }
+  .book-card-scale-slider {
+    display: none !important;
+  }
+  .book-list-total-page {
+    font-size: 12px !important;
+    margin: 0 2px !important;
+    white-space: nowrap;
+  }
+  .lang-setting-dropdown {
+    width: 52px !important;
+    margin-right: 2px !important;
+  }
+  .book-list-view {
+    width: 88px !important;
+  }
+
+  /* ---- "card" shelf view (small covers): two evenly centred columns ----- */
+  .book-list-container {
+    justify-content: space-evenly;
+    row-gap: 10px;
+  }
+  .book-list-item {
+    width: calc(50% - 12px) !important;
+    max-width: 170px;
+  }
+  .book-item-cover {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .book-item-title {
+    width: 94% !important;
+    margin-left: 3% !important;
+    text-align: center;
+  }
+
+  /* ---- "cover" view (cover + metadata side by side): one fluid row,
+         no more clipped 400px desktop cards ------------------------------ */
+  .book-list-cover-item {
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+  .book-cover-item-header {
+    width: calc(100% - 16px) !important;
+  }
+  .book-cover-item-cover {
+    width: 105px !important;
+    margin: 6px 12px 8px 0 !important;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .book-cover-item-cover .book-item-image {
+    max-width: 105px;
+  }
+  .book-cover-item-title,
+  .book-cover-item-author,
+  .book-cover-item-desc {
+    width: calc(100% - 122px) !important;
+  }
+  .book-cover-item-desc {
+    height: 36px !important;
+    -webkit-line-clamp: 2;
+  }
+  .book-cover-item-config {
+    display: none; /* hover-only affordance, unreachable on touch */
+  }
+
+  /* ---- "list" view rows: stack title over author instead of the desktop
+         three-column row that collapses to a few px on a phone ---------- */
+  .book-item-list-title {
+    left: 60px !important;
+    width: calc(100% - 70px) !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .book-item-list-subtitle,
+  .book-item-list-author,
+  .book-item-list-percentage {
+    height: auto !important;
+  }
+  .book-item-list-subtitle {
+    width: 100% !important;
+    float: none !important;
+    padding-left: 0 !important;
+    padding-right: 48px;
+    box-sizing: border-box;
+    display: block;
+  }
+  .book-item-list-subtitle-text {
+    float: none !important;
+    -webkit-line-clamp: 2;
+  }
+  .book-item-list-author {
+    width: 100% !important;
+    float: none !important;
+    padding-left: 0 !important;
+    display: block;
+    opacity: 0.7;
+  }
+  .book-item-list-percentage {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: auto !important;
+    float: none !important;
+    padding-left: 0 !important;
+  }
+
+  /* ---- note / digest cards: single full-width column -------------------- */
+  .card-list-item {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* ===========================================================================
+     3. Import button — stays a bottom-left FAB on phones; expose the
+        "more options" caret (import folder / cloud / OPDS / URL) as a small
+        badge so those entries stay reachable, matching the desktop entries.
+     ======================================================================== */
+  .import-from-local {
+    left: 12px;
+    right: auto;
+    top: calc(100vh - 78px);
+    width: 46px !important;
+    height: 46px;
+  }
+  .import-from-local .more-import-option {
+    width: 18px;
+    height: 18px;
+    right: -2px;
+    top: -4px;
+    bottom: auto;
+    transform: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .import-from-local .more-import-option .dropdown-triangle {
+    margin: 0;
+    border-top-width: 5px;
+  }
+  .import-from-local .more-options-dropdown {
+    left: 0 !important;
+    right: auto !important;
+  }
+  .import-from-cloud {
+    display: none;
+  }
+
+  /* ===========================================================================
+     4. Dialogs & popups — fit the viewport.
+     ======================================================================== */
   .setting-dialog-container {
     width: calc(100vw - 16px) !important;
     height: calc(100vh - 16px) !important;
@@ -116,7 +300,6 @@
   .delete-dialog-container,
   .edit-dialog-container,
   .metadata-dialog-container,
-  .action-dialog-container,
   .annotation-dialog-container,
   .sort-dialog-container,
   .popup-option-dialog-container {
@@ -124,12 +307,92 @@
     max-width: 100% !important;
     left: 12px !important;
   }
+  /* NOTE: .action-dialog-container is intentionally NOT forced full-width:
+     it is the JS-positioned context menu, which clamps itself to the
+     viewport and must keep its 200px width. */
   .loading-dialog {
     width: calc(100vw - 24px) !important;
     max-width: 100% !important;
   }
 
-  /* ---- footer / bottom actions ---- */
+  /* ===========================================================================
+     5. Reader — panels span the screen instead of keeping desktop widths.
+        Component stylesheets ship `width: 450px !important` for the two
+        horizontal panels and load after this file, so every override here
+        that fights them is body-prefixed to win on specificity.
+     ======================================================================== */
+  /* Top (operation) and bottom (progress) panels: 450px desktop width
+     overflows a phone in portrait. */
+  body .operation-panel-container,
+  body .progress-panel-container {
+    width: 100vw !important;
+    max-width: 450px;
+    left: 0 !important;
+    /* Ignore the desktop "shift away from a locked side panel" offsets. */
+    margin-left: 0 !important;
+  }
+  body .book-operation-panel {
+    width: 100vw !important;
+    max-width: 450px;
+    left: 0 !important;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }
+  body .book-opeartion-info {
+    width: 100%;
+    font-size: 13px;
+  }
+  body .exit-reading-button,
+  body .add-bookmark-button,
+  body .enter-fullscreen-button {
+    float: none;
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 8px 5px 0;
+  }
+  body .exit-reading-text,
+  body .add-bookmark-text,
+  body .enter-fullscreen-text {
+    margin-left: 2px;
+    font-size: 12px;
+  }
+  body .exit-reading-icon,
+  body .add-bookmark-icon,
+  body .enter-fullscreen-icon {
+    margin-left: 0;
+    margin-right: 4px;
+  }
+  body .progress-panel {
+    width: 100vw !important;
+    max-width: 450px;
+    left: 0 !important;
+    padding: 0 10px;
+    box-sizing: border-box;
+  }
+  body .progress-text {
+    font-size: 13px;
+  }
+
+  /* Side drawers: shrink a little on very small phones; the JS close
+     offset (309px) still fully hides a <= 299px panel. */
+  body .navigation-panel-container,
+  body .setting-panel-container {
+    width: min(299px, 88vw) !important;
+  }
+  .navigation-header,
+  .navigation-panel {
+    width: 100% !important;
+  }
+  .navigation-search-box {
+    width: calc(100% - 125px);
+  }
+
+  /* ===========================================================================
+     6. Footer / bottom actions
+     ======================================================================== */
   .footer {
     transform: scale(0.9) !important;
     transform-origin: bottom right !important;

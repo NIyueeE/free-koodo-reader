@@ -26,6 +26,7 @@ import {
   clearDiscordPresence,
 } from "../../utils/reader/discordRPC";
 import { READING_PANEL_TOGGLE_EVENT } from "../../utils/reader/mouseEvent";
+import { isMobileDevice } from "../../platform";
 import { throttle } from "../../utils/common";
 declare var window: any;
 let lock = false; //prevent from clicking too fasts
@@ -190,6 +191,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
       if (!book) return;
 
       this.props.handleFetchPercentage(book);
+      // Phones in portrait get single-page by default: the desktop
+      // double-page spread leaves each column unreadably narrow.
       let readerMode =
         (book.format === "PDF" &&
           !ConfigService.getAllListConfig("convertPDFBooks").includes(
@@ -197,7 +200,8 @@ class Reader extends React.Component<ReaderProps, ReaderState> {
           )) ||
         book.format.startsWith("CB")
           ? ConfigService.getReaderConfig("pdfReaderMode") || "scroll"
-          : ConfigService.getReaderConfig("readerMode") || "double";
+          : ConfigService.getReaderConfig("readerMode") ||
+            (isMobileDevice() ? "single" : "double");
       this.props.handleReaderMode(readerMode);
       this.props.handleReadingBook(book);
       // Start event-driven reading-time tracking

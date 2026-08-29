@@ -4,6 +4,7 @@ import { Trans } from "react-i18next";
 import { ProgressPanelProps, ProgressPanelState } from "./interface";
 import _ from "underscore";
 import { ConfigService } from "../../../assets/lib/kookit-extra-browser.min";
+import { isMobileDevice } from "../../../platform";
 import { scrollContents } from "../../../utils/common";
 class ProgressPanel extends React.Component<
   ProgressPanelProps,
@@ -123,7 +124,8 @@ class ProgressPanel extends React.Component<
         )) ||
       this.props.currentBook.format.startsWith("CB")
         ? ConfigService.getReaderConfig("pdfReaderMode") || "scroll"
-        : ConfigService.getReaderConfig("readerMode") || "double";
+        : ConfigService.getReaderConfig("readerMode") ||
+          (isMobileDevice() ? "single" : "double");
     return (
       <div className="progress-panel">
         <p className="progress-text" style={{ marginTop: 10 }}>

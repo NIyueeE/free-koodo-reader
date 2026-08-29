@@ -25,6 +25,7 @@ import {
 } from "../../utils/common";
 import DatabaseService from "../../utils/storage/databaseService";
 import { BookHelper } from "../../assets/lib/kookit.min";
+import { isMobileDevice } from "../../platform";
 
 // Convert supportedFormats to react-dropzone v14+ accept format
 // Key is MIME type, value is array of file extensions
@@ -389,7 +390,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
             ConfigService.getReaderConfig("textOrientation"),
           parserRegex: "",
           isDarkMode: "no",
-          isMobile: "no",
+          isMobile: isMobileDevice() ? "yes" : "no",
           password: "",
           isScannedPDF: "no",
           isKeepPDFBackground: "no",
@@ -796,14 +797,13 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                 : {}
             }
           >
-            {this.props.isCollapsed && this.state.width < 950 ? null : (
-              <div
-                className="more-import-option"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering the Dropzone
-                  this.toggleMoreOptions();
-                }}
-              >
+            <div
+              className="more-import-option"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering the Dropzone
+                this.toggleMoreOptions();
+              }}
+            >
                 <span className="dropdown-triangle"></span>
                 {this.state.isMoreOptionsVisible && (
                   <div
@@ -815,7 +815,6 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                             bottom: "calc(100% + 5px)",
                             top: "unset",
                             right: "unset",
-                            left: "-110px",
                           }
                         : {}
                     }
@@ -996,8 +995,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
                     )}
                   </div>
                 )}
-              </div>
-            )}
+            </div>
             <div className="animation-mask-local"></div>
             {this.props.isCollapsed && this.state.width < 950 ? (
               <span

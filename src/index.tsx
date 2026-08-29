@@ -15,6 +15,8 @@ import {
   applyAppBackgroundImage,
 } from "./utils/reader/launchUtil";
 import { migrateConfig } from "./utils/common";
+import { installMobileBridge } from "./platform";
+installMobileBridge();
 initTheme();
 initSystemFont();
 migrateConfig();

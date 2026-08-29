@@ -22,6 +22,7 @@ import {
   getTextRules,
 } from "../../../utils/common";
 import { BookHelper } from "../../../assets/lib/kookit.min";
+import { isMobileDevice } from "../../../platform";
 import {
   clampMenuPosition,
   CONTEXT_MENU_WIDTH,
@@ -319,7 +320,7 @@ class MoreAction extends React.Component<MoreActionProps, MoreActionState> {
                         ConfigService.getReaderConfig("textOrientation"),
                       parserRegex: "",
                       isDarkMode: "no",
-                      isMobile: "no",
+                      isMobile: isMobileDevice() ? "yes" : "no",
                       password: getPdfPassword(this.props.currentBook),
                       isScannedPDF: "no",
                       isKeepPDFBackground: "no",
